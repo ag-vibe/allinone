@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	pgx "github.com/jackc/pgx/v5"
 	querier "github.com/wibus-wee/allinone/pkg/zgen/querier"
 	gomock "go.uber.org/mock/gomock"
@@ -52,6 +53,50 @@ func (m *MockModelInterface) Close() {
 func (mr *MockModelInterfaceMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockModelInterface)(nil).Close))
+}
+
+// CreateTodo mocks base method.
+func (m *MockModelInterface) CreateTodo(ctx context.Context, arg querier.CreateTodoParams) (*querier.TodoItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTodo", ctx, arg)
+	ret0, _ := ret[0].(*querier.TodoItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateTodo indicates an expected call of CreateTodo.
+func (mr *MockModelInterfaceMockRecorder) CreateTodo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTodo", reflect.TypeOf((*MockModelInterface)(nil).CreateTodo), ctx, arg)
+}
+
+// DeleteTodo mocks base method.
+func (m *MockModelInterface) DeleteTodo(ctx context.Context, arg querier.DeleteTodoParams) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTodo", ctx, arg)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteTodo indicates an expected call of DeleteTodo.
+func (mr *MockModelInterfaceMockRecorder) DeleteTodo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTodo", reflect.TypeOf((*MockModelInterface)(nil).DeleteTodo), ctx, arg)
+}
+
+// EnsureUser mocks base method.
+func (m *MockModelInterface) EnsureUser(ctx context.Context, id int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureUser", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureUser indicates an expected call of EnsureUser.
+func (mr *MockModelInterfaceMockRecorder) EnsureUser(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureUser", reflect.TypeOf((*MockModelInterface)(nil).EnsureUser), ctx, id)
 }
 
 // GetCounter mocks base method.
@@ -97,6 +142,49 @@ func (mr *MockModelInterfaceMockRecorder) IncrementCounter(ctx any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrementCounter", reflect.TypeOf((*MockModelInterface)(nil).IncrementCounter), ctx)
 }
 
+// ListTodosByUser mocks base method.
+func (m *MockModelInterface) ListTodosByUser(ctx context.Context, userID int32) ([]*querier.TodoItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTodosByUser", ctx, userID)
+	ret0, _ := ret[0].([]*querier.TodoItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTodosByUser indicates an expected call of ListTodosByUser.
+func (mr *MockModelInterfaceMockRecorder) ListTodosByUser(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTodosByUser", reflect.TypeOf((*MockModelInterface)(nil).ListTodosByUser), ctx, userID)
+}
+
+// NormalizeTodayToWeek mocks base method.
+func (m *MockModelInterface) NormalizeTodayToWeek(ctx context.Context, userID int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NormalizeTodayToWeek", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NormalizeTodayToWeek indicates an expected call of NormalizeTodayToWeek.
+func (mr *MockModelInterfaceMockRecorder) NormalizeTodayToWeek(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NormalizeTodayToWeek", reflect.TypeOf((*MockModelInterface)(nil).NormalizeTodayToWeek), ctx, userID)
+}
+
+// NormalizeWeekToLater mocks base method.
+func (m *MockModelInterface) NormalizeWeekToLater(ctx context.Context, userID int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NormalizeWeekToLater", ctx, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NormalizeWeekToLater indicates an expected call of NormalizeWeekToLater.
+func (mr *MockModelInterfaceMockRecorder) NormalizeWeekToLater(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NormalizeWeekToLater", reflect.TypeOf((*MockModelInterface)(nil).NormalizeWeekToLater), ctx, userID)
+}
+
 // RunTransaction mocks base method.
 func (m *MockModelInterface) RunTransaction(ctx context.Context, f func(ModelInterface) error) error {
 	m.ctrl.T.Helper()
@@ -137,4 +225,33 @@ func (m *MockModelInterface) SpawnWithTx(tx pgx.Tx) ModelInterface {
 func (mr *MockModelInterfaceMockRecorder) SpawnWithTx(tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpawnWithTx", reflect.TypeOf((*MockModelInterface)(nil).SpawnWithTx), tx)
+}
+
+// UpdateTodo mocks base method.
+func (m *MockModelInterface) UpdateTodo(ctx context.Context, arg querier.UpdateTodoParams) (*querier.TodoItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTodo", ctx, arg)
+	ret0, _ := ret[0].(*querier.TodoItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTodo indicates an expected call of UpdateTodo.
+func (mr *MockModelInterfaceMockRecorder) UpdateTodo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTodo", reflect.TypeOf((*MockModelInterface)(nil).UpdateTodo), ctx, arg)
+}
+
+// UpdateTodoBucket mocks base method.
+func (m *MockModelInterface) UpdateTodoBucket(ctx context.Context, arg querier.UpdateTodoBucketParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTodoBucket", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTodoBucket indicates an expected call of UpdateTodoBucket.
+func (mr *MockModelInterfaceMockRecorder) UpdateTodoBucket(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTodoBucket", reflect.TypeOf((*MockModelInterface)(nil).UpdateTodoBucket), ctx, arg)
 }

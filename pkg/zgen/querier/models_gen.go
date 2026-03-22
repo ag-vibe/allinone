@@ -4,7 +4,30 @@
 
 package querier
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
 type Counter struct {
 	ID    int32
 	Value int32
+}
+
+type TodoItem struct {
+	ID             uuid.UUID
+	UserID         int32
+	Title          string
+	Done           bool
+	CreatedAt      time.Time
+	Bucket         string
+	PlannedForDay  pgtype.Date
+	PlannedForWeek pgtype.Date
+}
+
+type User struct {
+	ID        int32
+	CreatedAt time.Time
 }

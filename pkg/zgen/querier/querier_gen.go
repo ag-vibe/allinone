@@ -6,11 +6,21 @@ package querier
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	CreateTodo(ctx context.Context, arg CreateTodoParams) (*TodoItem, error)
+	DeleteTodo(ctx context.Context, arg DeleteTodoParams) (uuid.UUID, error)
+	EnsureUser(ctx context.Context, id int32) error
 	GetCounter(ctx context.Context) (*Counter, error)
 	IncrementCounter(ctx context.Context) error
+	ListTodosByUser(ctx context.Context, userID int32) ([]*TodoItem, error)
+	NormalizeTodayToWeek(ctx context.Context, userID int32) error
+	NormalizeWeekToLater(ctx context.Context, userID int32) error
+	UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoItem, error)
+	UpdateTodoBucket(ctx context.Context, arg UpdateTodoBucketParams) error
 }
 
 var _ Querier = (*Queries)(nil)

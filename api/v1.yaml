@@ -32,9 +32,91 @@ paths:
       responses:
         "202":
           description: The increment was accepted
-      security: 
-        - BearerAuth: 
+      security:
+        - BearerAuth:
             - x.OperationPermit(c, operationID)
+
+  /todos:
+    get:
+      summary: List TODO items for current user
+      operationId: listTodos
+      responses:
+        "200":
+          description: List of TODO items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TodoItem"
+      security:
+        - BearerAuth: []
+
+    post:
+      summary: Create a new TODO item
+      operationId: createTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTodoRequest"
+      responses:
+        "201":
+          description: Created TODO item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoItem"
+      security:
+        - BearerAuth: []
+
+  /todos/{id}:
+    patch:
+      summary: Update a TODO item
+      operationId: updateTodo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTodoRequest"
+      responses:
+        "200":
+          description: Updated TODO item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoItem"
+        "404":
+          description: TODO item not found
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: Delete a TODO item
+      operationId: deleteTodo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: TODO item deleted
+        "404":
+          description: TODO item not found
+      security:
+        - BearerAuth: []
 
 components:
   schemas:
@@ -45,6 +127,42 @@ components:
         count:
           type: integer
           format: int32
+
+    TodoItem:
+      type: object
+      required: [id, title, done, createdAt, bucket]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        done:
+          type: boolean
+        bucket:
+          type: string
+          enum: [later, week, today]
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateTodoRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+
+    UpdateTodoRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        done:
+          type: boolean
+        bucket:
+          type: string
+          enum: [later, week, today]
 
 x-check-rules:
   OperationPermit:

@@ -1,20 +1,31 @@
 package handler
 
 import (
+	"errors"
+
+	anclaxauth "github.com/cloudcarver/anclax/pkg/auth"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/wibus-wee/allinone/pkg/zcore/model"
 	"github.com/wibus-wee/allinone/pkg/zgen/apigen"
+	"github.com/wibus-wee/allinone/pkg/zgen/querier"
 	"github.com/wibus-wee/allinone/pkg/zgen/taskgen"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type Handler struct {
 	model      model.ModelInterface
 	taskrunner taskgen.TaskRunner
+	todos      TodoService
 }
 
 func NewHandler(model model.ModelInterface, taskrunner taskgen.TaskRunner) (apigen.ServerInterface, error) {
-	return &Handler{model, taskrunner}, nil
+	return &Handler{
+		model:      model,
+		taskrunner: taskrunner,
+		todos:      NewTodoService(model),
+	}, nil
 }
 
 func (h *Handler) GetCounter(c *fiber.Ctx) error {
@@ -33,4 +44,98 @@ func (h *Handler) IncrementCounter(c *fiber.Ctx) error {
 		return err
 	}
 	return c.Status(fiber.StatusAccepted).SendString("Incremented")
+}
+
+func (h *Handler) ListTodos(c *fiber.Ctx) error {
+	userID, err := anclaxauth.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+	}
+
+	items, err := h.todos.ListTodos(c.Context(), userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	result := make([]apigen.TodoItem, 0, len(items))
+	for _, item := range items {
+		result = append(result, mapTodoToAPI(item))
+	}
+
+	return c.JSON(result)
+}
+
+func (h *Handler) CreateTodo(c *fiber.Ctx) error {
+	userID, err := anclaxauth.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+	}
+
+	var req apigen.CreateTodoRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+	if req.Title == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("title is required")
+	}
+
+	item, err := h.todos.CreateTodo(c.Context(), userID, req.Title)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(mapTodoToAPI(item))
+}
+
+func (h *Handler) UpdateTodo(c *fiber.Ctx, id openapi_types.UUID) error {
+	userID, err := anclaxauth.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+	}
+
+	var req apigen.UpdateTodoRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+	var bucket *string
+	if req.Bucket != nil {
+		b := string(*req.Bucket)
+		bucket = &b
+	}
+
+	item, err := h.todos.UpdateTodo(c.Context(), userID, uuid.UUID(id), req.Title, req.Done, bucket)
+	if err != nil {
+		if errors.Is(err, ErrTodoNotFound) {
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	return c.JSON(mapTodoToAPI(item))
+}
+
+func (h *Handler) DeleteTodo(c *fiber.Ctx, id openapi_types.UUID) error {
+	userID, err := anclaxauth.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+	}
+
+	if err := h.todos.DeleteTodo(c.Context(), userID, uuid.UUID(id)); err != nil {
+		if errors.Is(err, ErrTodoNotFound) {
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func mapTodoToAPI(item *querier.TodoItem) apigen.TodoItem {
+	return apigen.TodoItem{
+		Id:        openapi_types.UUID(item.ID),
+		Title:     item.Title,
+		Done:      item.Done,
+		Bucket:    apigen.TodoItemBucket(item.Bucket),
+		CreatedAt: item.CreatedAt,
+	}
 }
