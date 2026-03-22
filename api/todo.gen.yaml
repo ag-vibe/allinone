@@ -57,6 +57,11 @@ components:
                 title:
                     type: string
             type: object
+    securitySchemes:
+        BearerAuth:
+            bearerFormat: JWT
+            scheme: bearer
+            type: http
 info:
     description: API for interacting with my anclax project
     title: My Anclax Project
