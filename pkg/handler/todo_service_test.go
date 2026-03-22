@@ -34,6 +34,8 @@ func TestTodoService_ListTodos(t *testing.T) {
 			name: "no todos",
 			setup: func(m *model.MockModelInterface) {
 				m.EXPECT().EnsureUser(ctx, userID).Return(nil)
+				m.EXPECT().NormalizeTodayToWeek(ctx, userID).Return(nil)
+				m.EXPECT().NormalizeWeekToLater(ctx, userID).Return(nil)
 				m.EXPECT().ListTodosByUser(ctx, userID).Return(nil, nil)
 			},
 			wantErr: false,
@@ -42,6 +44,8 @@ func TestTodoService_ListTodos(t *testing.T) {
 			name: "some todos",
 			setup: func(m *model.MockModelInterface) {
 				m.EXPECT().EnsureUser(ctx, userID).Return(nil)
+				m.EXPECT().NormalizeTodayToWeek(ctx, userID).Return(nil)
+				m.EXPECT().NormalizeWeekToLater(ctx, userID).Return(nil)
 				m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.TodoItem{
 					{ID: uuid.New(), UserID: userID, Title: "a"},
 					{ID: uuid.New(), UserID: userID, Title: "b"},
