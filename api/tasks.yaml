@@ -1,0 +1,27 @@
+tasks:
+  - name: AutoIncrementCounter
+    description: Increment the counter
+    cronjob:
+      cronExpression: "*/5 * * * * *"
+    retryPolicy:
+      interval: 30m
+      maxAttempts: -1
+    parameters:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: integer
+          format: int32
+  - name: IncrementCounter
+    description: Increment the counter
+    retryPolicy:
+      interval: 30m
+      maxAttempts: -1
+    parameters:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: integer
+          format: int32
