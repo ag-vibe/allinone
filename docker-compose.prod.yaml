@@ -1,0 +1,15 @@
+services:
+  backend:
+    image: ghcr.io/ag-vibe/allinone-backend:latest
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-2910}:2910"
+    environment:
+      MYAPP_ANCLAX_PORT: 2910
+      MYAPP_ANCLAX_PG_DSN: ${PG_DSN}
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
