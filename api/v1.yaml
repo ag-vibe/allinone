@@ -6,6 +6,8 @@ info:
   description: API for interacting with my anclax project
 
 servers:
+  - url: http://localhost:2910/api/v1
+    description: Local development server
   - url: /api/v1
     description: Base API path
 
