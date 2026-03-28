@@ -138,12 +138,14 @@ components:
 
     TodoItem:
       type: object
-      required: [id, title, done, createdAt, bucket]
+      required: [id, title, description, done, createdAt, bucket]
       properties:
         id:
           type: string
           format: uuid
         title:
+          type: string
+        description:
           type: string
         done:
           type: boolean
@@ -165,6 +167,8 @@ components:
       type: object
       properties:
         title:
+          type: string
+        description:
           type: string
         done:
           type: boolean

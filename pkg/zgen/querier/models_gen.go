@@ -25,6 +25,7 @@ type TodoItem struct {
 	Bucket         string
 	PlannedForDay  pgtype.Date
 	PlannedForWeek pgtype.Date
+	Description    string
 }
 
 type User struct {

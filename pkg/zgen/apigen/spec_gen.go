@@ -49,11 +49,12 @@ type CreateTodoRequest struct {
 
 // TodoItem defines model for TodoItem.
 type TodoItem struct {
-	Bucket    TodoItemBucket     `json:"bucket"`
-	CreatedAt time.Time          `json:"createdAt"`
-	Done      bool               `json:"done"`
-	Id        openapi_types.UUID `json:"id"`
-	Title     string             `json:"title"`
+	Bucket      TodoItemBucket     `json:"bucket"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	Description string             `json:"description"`
+	Done        bool               `json:"done"`
+	Id          openapi_types.UUID `json:"id"`
+	Title       string             `json:"title"`
 }
 
 // TodoItemBucket defines model for TodoItem.Bucket.
@@ -61,9 +62,10 @@ type TodoItemBucket string
 
 // UpdateTodoRequest defines model for UpdateTodoRequest.
 type UpdateTodoRequest struct {
-	Bucket *UpdateTodoRequestBucket `json:"bucket,omitempty"`
-	Done   *bool                    `json:"done,omitempty"`
-	Title  *string                  `json:"title,omitempty"`
+	Bucket      *UpdateTodoRequestBucket `json:"bucket,omitempty"`
+	Description *string                  `json:"description,omitempty"`
+	Done        *bool                    `json:"done,omitempty"`
+	Title       *string                  `json:"title,omitempty"`
 }
 
 // UpdateTodoRequestBucket defines model for UpdateTodoRequest.Bucket.

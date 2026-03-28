@@ -1,10 +1,10 @@
 -- name: CreateTodo :one
 INSERT INTO todo_items (id, user_id, title, bucket)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week;
+RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description;
 
 -- name: ListTodosByUser :many
-SELECT id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week
+SELECT id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
 FROM todo_items
 WHERE user_id = $1
 ORDER BY created_at DESC;
@@ -12,9 +12,10 @@ ORDER BY created_at DESC;
 -- name: UpdateTodo :one
 UPDATE todo_items
 SET title = $3,
-    done = $4
+    done = $4,
+    description = $5
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week;
+RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description;
 
 -- name: DeleteTodo :one
 DELETE FROM todo_items
