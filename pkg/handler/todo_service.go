@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,7 +18,7 @@ import (
 type TodoService interface {
 	ListTodos(ctx context.Context, userID int32) ([]*querier.TodoItem, error)
 	CreateTodo(ctx context.Context, userID int32, title string) (*querier.TodoItem, error)
-	UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string) (*querier.TodoItem, error)
+	UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string, description *string) (*querier.TodoItem, error)
 	DeleteTodo(ctx context.Context, userID int32, id uuid.UUID) error
 }
 
@@ -74,7 +75,7 @@ func (s *todoService) CreateTodo(ctx context.Context, userID int32, title string
 	return s.model.CreateTodo(ctx, params)
 }
 
-func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string) (*querier.TodoItem, error) {
+func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string, description *string) (*querier.TodoItem, error) {
 	if err := s.ensureUser(ctx, userID); err != nil {
 		return nil, err
 	}
@@ -110,6 +111,11 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 		newDone = *done
 	}
 
+	newDescription := current.Description
+	if description != nil {
+		newDescription = strings.TrimSpace(*description)
+	}
+
 	newBucket := current.Bucket
 	if bucket != nil && *bucket != "" {
 		newBucket = *bucket
@@ -117,10 +123,11 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 
 	// Update main fields first.
 	updateParams := querier.UpdateTodoParams{
-		ID:     id,
-		UserID: userID,
-		Title:  newTitle,
-		Done:   newDone,
+		ID:          id,
+		UserID:      userID,
+		Title:       newTitle,
+		Done:        newDone,
+		Description: newDescription,
 	}
 
 	updated, err := s.model.UpdateTodo(ctx, updateParams)
@@ -172,6 +179,7 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 
 	// Reflect the bucket/planned fields on the returned item.
 	updated.Bucket = newBucket
+	updated.Description = newDescription
 	updated.PlannedForDay = plannedDay
 	updated.PlannedForWeek = plannedWeek
 

@@ -15,7 +15,7 @@ import (
 const createTodo = `-- name: CreateTodo :one
 INSERT INTO todo_items (id, user_id, title, bucket)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week
+RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
 `
 
 type CreateTodoParams struct {
@@ -42,6 +42,7 @@ func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (*TodoIt
 		&i.Bucket,
 		&i.PlannedForDay,
 		&i.PlannedForWeek,
+		&i.Description,
 	)
 	return &i, err
 }
@@ -65,7 +66,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) (uuid.UU
 }
 
 const listTodosByUser = `-- name: ListTodosByUser :many
-SELECT id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week
+SELECT id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
 FROM todo_items
 WHERE user_id = $1
 ORDER BY created_at DESC
@@ -89,6 +90,7 @@ func (q *Queries) ListTodosByUser(ctx context.Context, userID int32) ([]*TodoIte
 			&i.Bucket,
 			&i.PlannedForDay,
 			&i.PlannedForWeek,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}
@@ -135,16 +137,18 @@ func (q *Queries) NormalizeWeekToLater(ctx context.Context, userID int32) error 
 const updateTodo = `-- name: UpdateTodo :one
 UPDATE todo_items
 SET title = $3,
-    done = $4
+    done = $4,
+    description = $5
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week
+RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
 `
 
 type UpdateTodoParams struct {
-	ID     uuid.UUID
-	UserID int32
-	Title  string
-	Done   bool
+	ID          uuid.UUID
+	UserID      int32
+	Title       string
+	Done        bool
+	Description string
 }
 
 func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoItem, error) {
@@ -153,6 +157,7 @@ func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoIt
 		arg.UserID,
 		arg.Title,
 		arg.Done,
+		arg.Description,
 	)
 	var i TodoItem
 	err := row.Scan(
@@ -164,6 +169,7 @@ func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoIt
 		&i.Bucket,
 		&i.PlannedForDay,
 		&i.PlannedForWeek,
+		&i.Description,
 	)
 	return &i, err
 }

@@ -30,6 +30,8 @@ components:
                 createdAt:
                     format: date-time
                     type: string
+                description:
+                    type: string
                 done:
                     type: boolean
                 id:
@@ -40,6 +42,7 @@ components:
             required:
                 - id
                 - title
+                - description
                 - done
                 - createdAt
                 - bucket
@@ -51,6 +54,8 @@ components:
                         - later
                         - week
                         - today
+                    type: string
+                description:
                     type: string
                 done:
                     type: boolean
@@ -147,5 +152,7 @@ paths:
                 - BearerAuth: []
             summary: Update a TODO item
 servers:
+    - description: Local development server
+      url: http://localhost:2910/api/v1
     - description: Base API path
       url: /api/v1

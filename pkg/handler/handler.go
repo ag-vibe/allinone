@@ -103,7 +103,7 @@ func (h *Handler) UpdateTodo(c *fiber.Ctx, id openapi_types.UUID) error {
 		bucket = &b
 	}
 
-	item, err := h.todos.UpdateTodo(c.Context(), userID, uuid.UUID(id), req.Title, req.Done, bucket)
+	item, err := h.todos.UpdateTodo(c.Context(), userID, uuid.UUID(id), req.Title, req.Done, bucket, req.Description)
 	if err != nil {
 		if errors.Is(err, ErrTodoNotFound) {
 			return c.SendStatus(fiber.StatusNotFound)
@@ -132,10 +132,11 @@ func (h *Handler) DeleteTodo(c *fiber.Ctx, id openapi_types.UUID) error {
 
 func mapTodoToAPI(item *querier.TodoItem) apigen.TodoItem {
 	return apigen.TodoItem{
-		Id:        openapi_types.UUID(item.ID),
-		Title:     item.Title,
-		Done:      item.Done,
-		Bucket:    apigen.TodoItemBucket(item.Bucket),
-		CreatedAt: item.CreatedAt,
+		Id:          openapi_types.UUID(item.ID),
+		Title:       item.Title,
+		Description: item.Description,
+		Done:        item.Done,
+		Bucket:      apigen.TodoItemBucket(item.Bucket),
+		CreatedAt:   item.CreatedAt,
 	}
 }
