@@ -10,6 +10,12 @@ WHERE attachment_id = $1
   AND resource_type = $3
   AND resource_id = $4;
 
+-- name: DeleteAttachmentLinksByResource :exec
+DELETE FROM attachment_links
+WHERE user_id = $1
+  AND resource_type = $2
+  AND resource_id = $3;
+
 -- name: ListAttachmentsByResource :many
 SELECT a.id, a.user_id, a.filename, a.content_type, a.size_bytes, a.storage_path, a.created_at
 FROM attachment_links l

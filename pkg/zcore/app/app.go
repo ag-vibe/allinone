@@ -5,7 +5,7 @@ import (
 
 	anclax_app "github.com/cloudcarver/anclax/pkg/app"
 	"github.com/cloudcarver/anclax/pkg/taskcore/worker"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type App struct {

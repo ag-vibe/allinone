@@ -14,18 +14,6 @@ import (
 	anclax_app "github.com/cloudcarver/anclax/pkg/app"
 )
 
-func ProvidePluginMeta() anclax_app.PluginMeta {
-	return anclax_app.PluginMeta{
-		// This field is for avoiding conflicts with other Anclax plugins.
-		// It will be used as the table name of the migration table.
-		// You can change it to any string that is unique in your application.
-		//
-		// [IMPORTANT]
-		// This field should NOT be changed after the application is deployed.
-		Namespace: "myapp",
-	}
-}
-
 // This will run before the application starts.
 func Init(anclaxApp *anclax_app.Application, taskrunner taskgen.TaskRunner, myapp anclax_app.Plugin, model model.ModelInterface) (*app.App, error) {
 	if err := anclaxApp.Plug(myapp); err != nil {

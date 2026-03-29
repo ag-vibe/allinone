@@ -34,6 +34,29 @@ type Counter struct {
 	Value int32
 }
 
+type Memo struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type MemoRelation struct {
+	SourceMemoID uuid.UUID
+	TargetMemoID uuid.UUID
+	UserID       int32
+}
+
+type MemoTag struct {
+	MemoID uuid.UUID
+	UserID int32
+	Tag    string
+}
+
 type TodoItem struct {
 	ID             uuid.UUID
 	UserID         int32

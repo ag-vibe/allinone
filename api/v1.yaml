@@ -120,6 +120,197 @@ paths:
       security:
         - BearerAuth: []
 
+  /memos:
+    get:
+      summary: List memos for current user
+      operationId: listMemos
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: tag
+          schema:
+            type: string
+        - in: query
+          name: state
+          schema:
+            $ref: "#/components/schemas/MemoState"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int32
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        "200":
+          description: Memo list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemoSummary"
+      security:
+        - BearerAuth: []
+
+    post:
+      summary: Create a new memo
+      operationId: createMemo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMemoRequest"
+      responses:
+        "201":
+          description: Created memo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Memo"
+        "422":
+          description: Invalid memo references
+      security:
+        - BearerAuth: []
+
+  /memos/{id}:
+    get:
+      summary: Get memo by ID
+      operationId: getMemo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Memo details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Memo"
+        "404":
+          description: Memo not found
+      security:
+        - BearerAuth: []
+
+    patch:
+      summary: Update a memo
+      operationId: updateMemo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemoRequest"
+      responses:
+        "200":
+          description: Updated memo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Memo"
+        "404":
+          description: Memo not found
+        "422":
+          description: Invalid memo references
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: Delete a memo
+      operationId: deleteMemo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Memo deleted
+        "404":
+          description: Memo not found
+      security:
+        - BearerAuth: []
+
+  /memos/{id}/backlinks:
+    get:
+      summary: List backlinks for a memo
+      operationId: listMemoBacklinks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Backlink list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemoSummary"
+        "404":
+          description: Memo not found
+      security:
+        - BearerAuth: []
+
+  /tags:
+    get:
+      summary: List tags for current user
+      operationId: listTags
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int32
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        "200":
+          description: Tag list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagSummary"
+      security:
+        - BearerAuth: []
+
   /attachments:
     post:
       summary: Upload attachment
@@ -323,6 +514,79 @@ components:
           type: string
           format: date-time
 
+    MemoState:
+      type: string
+      enum: [active, archived]
+
+    Memo:
+      type: object
+      required: [id, content, excerpt, state, tags, references, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        excerpt:
+          type: string
+        state:
+          $ref: "#/components/schemas/MemoState"
+        tags:
+          type: array
+          items:
+            type: string
+        references:
+          type: array
+          items:
+            type: string
+            format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    MemoSummary:
+      type: object
+      required: [id, excerpt, state, tags, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        excerpt:
+          type: string
+        state:
+          $ref: "#/components/schemas/MemoState"
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TagSummary:
+      type: object
+      required: [name, count]
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+          format: int64
+
     Attachment:
       type: object
       required: [id, filename, contentType, sizeBytes, createdAt, downloadUrl]
@@ -372,6 +636,21 @@ components:
         bucket:
           type: string
           enum: [later, week, today]
+
+    CreateMemoRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    UpdateMemoRequest:
+      type: object
+      properties:
+        content:
+          type: string
+        state:
+          $ref: "#/components/schemas/MemoState"
 
 x-check-rules:
   OperationPermit:

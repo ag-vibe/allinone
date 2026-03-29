@@ -59,6 +59,24 @@ func (q *Queries) DeleteAttachmentLink(ctx context.Context, arg DeleteAttachment
 	return err
 }
 
+const deleteAttachmentLinksByResource = `-- name: DeleteAttachmentLinksByResource :exec
+DELETE FROM attachment_links
+WHERE user_id = $1
+  AND resource_type = $2
+  AND resource_id = $3
+`
+
+type DeleteAttachmentLinksByResourceParams struct {
+	UserID       int32
+	ResourceType string
+	ResourceID   uuid.UUID
+}
+
+func (q *Queries) DeleteAttachmentLinksByResource(ctx context.Context, arg DeleteAttachmentLinksByResourceParams) error {
+	_, err := q.db.Exec(ctx, deleteAttachmentLinksByResource, arg.UserID, arg.ResourceType, arg.ResourceID)
+	return err
+}
+
 const listAttachmentsByResource = `-- name: ListAttachmentsByResource :many
 SELECT a.id, a.user_id, a.filename, a.content_type, a.size_bytes, a.storage_path, a.created_at
 FROM attachment_links l

@@ -24,4 +24,5 @@ ut:
 
 gen:
 	anclax gen
-	go run ./cmd/openapi-subset -in api/v1.yaml -out api/todo.gen.yaml -prefix /todos
+	go run ./cmd/openapi-subset -in api/v1.yaml -out api/todo.gen.yaml -prefix /todos -prefix /attachments -prefix /resources
+	go run ./cmd/openapi-subset -in api/v1.yaml -out api/memos.gen.yaml -prefix /memos -prefix /tags -prefix /attachments -prefix /resources

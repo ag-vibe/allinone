@@ -27,7 +27,6 @@ func InitApp() (*app.App, error) {
 		asynctask.NewExecutor,
 		model.NewModel,
 		config.NewConfig,
-		pkg.ProvidePluginMeta,
 		pkg.Init,
 		pkg.InitAnclaxApplication,
 		app.NewPlugin,

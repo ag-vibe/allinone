@@ -84,6 +84,49 @@ func (mr *MockModelInterfaceMockRecorder) CreateAttachmentLink(ctx, arg any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAttachmentLink", reflect.TypeOf((*MockModelInterface)(nil).CreateAttachmentLink), ctx, arg)
 }
 
+// CreateMemo mocks base method.
+func (m *MockModelInterface) CreateMemo(ctx context.Context, arg querier.CreateMemoParams) (*querier.Memo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateMemo", ctx, arg)
+	ret0, _ := ret[0].(*querier.Memo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMemo indicates an expected call of CreateMemo.
+func (mr *MockModelInterfaceMockRecorder) CreateMemo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMemo", reflect.TypeOf((*MockModelInterface)(nil).CreateMemo), ctx, arg)
+}
+
+// CreateMemoRelation mocks base method.
+func (m *MockModelInterface) CreateMemoRelation(ctx context.Context, arg querier.CreateMemoRelationParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateMemoRelation", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateMemoRelation indicates an expected call of CreateMemoRelation.
+func (mr *MockModelInterfaceMockRecorder) CreateMemoRelation(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMemoRelation", reflect.TypeOf((*MockModelInterface)(nil).CreateMemoRelation), ctx, arg)
+}
+
+// CreateMemoTag mocks base method.
+func (m *MockModelInterface) CreateMemoTag(ctx context.Context, arg querier.CreateMemoTagParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateMemoTag", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateMemoTag indicates an expected call of CreateMemoTag.
+func (mr *MockModelInterfaceMockRecorder) CreateMemoTag(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMemoTag", reflect.TypeOf((*MockModelInterface)(nil).CreateMemoTag), ctx, arg)
+}
+
 // CreateTodo mocks base method.
 func (m *MockModelInterface) CreateTodo(ctx context.Context, arg querier.CreateTodoParams) (*querier.TodoItem, error) {
 	m.ctrl.T.Helper()
@@ -126,6 +169,63 @@ func (m *MockModelInterface) DeleteAttachmentLink(ctx context.Context, arg queri
 func (mr *MockModelInterfaceMockRecorder) DeleteAttachmentLink(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachmentLink", reflect.TypeOf((*MockModelInterface)(nil).DeleteAttachmentLink), ctx, arg)
+}
+
+// DeleteAttachmentLinksByResource mocks base method.
+func (m *MockModelInterface) DeleteAttachmentLinksByResource(ctx context.Context, arg querier.DeleteAttachmentLinksByResourceParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAttachmentLinksByResource", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAttachmentLinksByResource indicates an expected call of DeleteAttachmentLinksByResource.
+func (mr *MockModelInterfaceMockRecorder) DeleteAttachmentLinksByResource(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachmentLinksByResource", reflect.TypeOf((*MockModelInterface)(nil).DeleteAttachmentLinksByResource), ctx, arg)
+}
+
+// DeleteMemo mocks base method.
+func (m *MockModelInterface) DeleteMemo(ctx context.Context, arg querier.DeleteMemoParams) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMemo", ctx, arg)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteMemo indicates an expected call of DeleteMemo.
+func (mr *MockModelInterfaceMockRecorder) DeleteMemo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMemo", reflect.TypeOf((*MockModelInterface)(nil).DeleteMemo), ctx, arg)
+}
+
+// DeleteMemoRelationsBySource mocks base method.
+func (m *MockModelInterface) DeleteMemoRelationsBySource(ctx context.Context, arg querier.DeleteMemoRelationsBySourceParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMemoRelationsBySource", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMemoRelationsBySource indicates an expected call of DeleteMemoRelationsBySource.
+func (mr *MockModelInterfaceMockRecorder) DeleteMemoRelationsBySource(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMemoRelationsBySource", reflect.TypeOf((*MockModelInterface)(nil).DeleteMemoRelationsBySource), ctx, arg)
+}
+
+// DeleteMemoTagsByMemo mocks base method.
+func (m *MockModelInterface) DeleteMemoTagsByMemo(ctx context.Context, arg querier.DeleteMemoTagsByMemoParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMemoTagsByMemo", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMemoTagsByMemo indicates an expected call of DeleteMemoTagsByMemo.
+func (mr *MockModelInterfaceMockRecorder) DeleteMemoTagsByMemo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMemoTagsByMemo", reflect.TypeOf((*MockModelInterface)(nil).DeleteMemoTagsByMemo), ctx, arg)
 }
 
 // DeleteTodo mocks base method.
@@ -187,6 +287,21 @@ func (mr *MockModelInterfaceMockRecorder) GetCounter(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockModelInterface)(nil).GetCounter), ctx)
 }
 
+// GetMemoByID mocks base method.
+func (m *MockModelInterface) GetMemoByID(ctx context.Context, arg querier.GetMemoByIDParams) (*querier.Memo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMemoByID", ctx, arg)
+	ret0, _ := ret[0].(*querier.Memo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMemoByID indicates an expected call of GetMemoByID.
+func (mr *MockModelInterfaceMockRecorder) GetMemoByID(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMemoByID", reflect.TypeOf((*MockModelInterface)(nil).GetMemoByID), ctx, arg)
+}
+
 // InTransaction mocks base method.
 func (m *MockModelInterface) InTransaction() bool {
 	m.ctrl.T.Helper()
@@ -228,6 +343,81 @@ func (m *MockModelInterface) ListAttachmentsByResource(ctx context.Context, arg 
 func (mr *MockModelInterfaceMockRecorder) ListAttachmentsByResource(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAttachmentsByResource", reflect.TypeOf((*MockModelInterface)(nil).ListAttachmentsByResource), ctx, arg)
+}
+
+// ListMemoBacklinks mocks base method.
+func (m *MockModelInterface) ListMemoBacklinks(ctx context.Context, arg querier.ListMemoBacklinksParams) ([]*querier.Memo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMemoBacklinks", ctx, arg)
+	ret0, _ := ret[0].([]*querier.Memo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMemoBacklinks indicates an expected call of ListMemoBacklinks.
+func (mr *MockModelInterfaceMockRecorder) ListMemoBacklinks(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMemoBacklinks", reflect.TypeOf((*MockModelInterface)(nil).ListMemoBacklinks), ctx, arg)
+}
+
+// ListMemoReferenceIDsBySource mocks base method.
+func (m *MockModelInterface) ListMemoReferenceIDsBySource(ctx context.Context, arg querier.ListMemoReferenceIDsBySourceParams) ([]uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMemoReferenceIDsBySource", ctx, arg)
+	ret0, _ := ret[0].([]uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMemoReferenceIDsBySource indicates an expected call of ListMemoReferenceIDsBySource.
+func (mr *MockModelInterfaceMockRecorder) ListMemoReferenceIDsBySource(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMemoReferenceIDsBySource", reflect.TypeOf((*MockModelInterface)(nil).ListMemoReferenceIDsBySource), ctx, arg)
+}
+
+// ListMemoTagsByMemo mocks base method.
+func (m *MockModelInterface) ListMemoTagsByMemo(ctx context.Context, arg querier.ListMemoTagsByMemoParams) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMemoTagsByMemo", ctx, arg)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMemoTagsByMemo indicates an expected call of ListMemoTagsByMemo.
+func (mr *MockModelInterfaceMockRecorder) ListMemoTagsByMemo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMemoTagsByMemo", reflect.TypeOf((*MockModelInterface)(nil).ListMemoTagsByMemo), ctx, arg)
+}
+
+// ListMemos mocks base method.
+func (m *MockModelInterface) ListMemos(ctx context.Context, arg querier.ListMemosParams) ([]*querier.Memo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMemos", ctx, arg)
+	ret0, _ := ret[0].([]*querier.Memo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMemos indicates an expected call of ListMemos.
+func (mr *MockModelInterfaceMockRecorder) ListMemos(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMemos", reflect.TypeOf((*MockModelInterface)(nil).ListMemos), ctx, arg)
+}
+
+// ListTags mocks base method.
+func (m *MockModelInterface) ListTags(ctx context.Context, arg querier.ListTagsParams) ([]*querier.ListTagsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTags", ctx, arg)
+	ret0, _ := ret[0].([]*querier.ListTagsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTags indicates an expected call of ListTags.
+func (mr *MockModelInterfaceMockRecorder) ListTags(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTags", reflect.TypeOf((*MockModelInterface)(nil).ListTags), ctx, arg)
 }
 
 // ListTodosByUser mocks base method.
@@ -313,6 +503,21 @@ func (m *MockModelInterface) SpawnWithTx(tx pgx.Tx) ModelInterface {
 func (mr *MockModelInterfaceMockRecorder) SpawnWithTx(tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpawnWithTx", reflect.TypeOf((*MockModelInterface)(nil).SpawnWithTx), tx)
+}
+
+// UpdateMemo mocks base method.
+func (m *MockModelInterface) UpdateMemo(ctx context.Context, arg querier.UpdateMemoParams) (*querier.Memo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMemo", ctx, arg)
+	ret0, _ := ret[0].(*querier.Memo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateMemo indicates an expected call of UpdateMemo.
+func (mr *MockModelInterfaceMockRecorder) UpdateMemo(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMemo", reflect.TypeOf((*MockModelInterface)(nil).UpdateMemo), ctx, arg)
 }
 
 // UpdateTodo mocks base method.
