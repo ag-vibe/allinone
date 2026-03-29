@@ -11,6 +11,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Attachment struct {
+	ID          uuid.UUID
+	UserID      int32
+	Filename    string
+	ContentType string
+	SizeBytes   int64
+	StoragePath string
+	CreatedAt   time.Time
+}
+
+type AttachmentLink struct {
+	AttachmentID uuid.UUID
+	UserID       int32
+	ResourceType string
+	ResourceID   uuid.UUID
+	CreatedAt    time.Time
+}
+
 type Counter struct {
 	ID    int32
 	Value int32

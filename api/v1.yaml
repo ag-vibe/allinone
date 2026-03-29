@@ -120,6 +120,173 @@ paths:
       security:
         - BearerAuth: []
 
+  /attachments:
+    post:
+      summary: Upload attachment
+      operationId: uploadAttachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Attachment uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+      security:
+        - BearerAuth: []
+
+  /attachments/{id}:
+    get:
+      summary: Get attachment metadata
+      operationId: getAttachment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Attachment metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+        "404":
+          description: Attachment not found
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: Delete attachment
+      operationId: deleteAttachment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Attachment deleted
+        "404":
+          description: Attachment not found
+      security:
+        - BearerAuth: []
+
+  /attachments/{id}/content:
+    get:
+      summary: Download attachment content
+      operationId: downloadAttachment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Attachment content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Attachment not found
+      security:
+        - BearerAuth: []
+
+  /attachments/{id}/links:
+    post:
+      summary: Link attachment to a resource
+      operationId: linkAttachment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkAttachmentRequest"
+      responses:
+        "204":
+          description: Attachment linked
+        "404":
+          description: Attachment not found
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: Unlink attachment from a resource
+      operationId: unlinkAttachment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkAttachmentRequest"
+      responses:
+        "204":
+          description: Attachment unlinked
+        "404":
+          description: Attachment not found
+      security:
+        - BearerAuth: []
+
+  /resources/{resourceType}/{resourceId}/attachments:
+    get:
+      summary: List attachments by resource
+      operationId: listAttachmentsByResource
+      parameters:
+        - in: path
+          name: resourceType
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: resourceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Attachment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Attachment"
+      security:
+        - BearerAuth: []
+
 components:
   securitySchemes:
     BearerAuth:
@@ -155,6 +322,36 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    Attachment:
+      type: object
+      required: [id, filename, contentType, sizeBytes, createdAt, downloadUrl]
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        downloadUrl:
+          type: string
+
+    LinkAttachmentRequest:
+      type: object
+      required: [resourceType, resourceId]
+      properties:
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+          format: uuid
 
     CreateTodoRequest:
       type: object

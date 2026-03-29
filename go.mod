@@ -1,6 +1,6 @@
 module github.com/wibus-wee/allinone
 
-go 1.25.6
+go 1.26.1
 
 require (
 	github.com/cloudcarver/anclax v0.9.1

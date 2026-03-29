@@ -11,11 +11,17 @@ import (
 )
 
 type Querier interface {
+	CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (*Attachment, error)
+	CreateAttachmentLink(ctx context.Context, arg CreateAttachmentLinkParams) error
 	CreateTodo(ctx context.Context, arg CreateTodoParams) (*TodoItem, error)
+	DeleteAttachment(ctx context.Context, arg DeleteAttachmentParams) (*Attachment, error)
+	DeleteAttachmentLink(ctx context.Context, arg DeleteAttachmentLinkParams) error
 	DeleteTodo(ctx context.Context, arg DeleteTodoParams) (uuid.UUID, error)
 	EnsureUser(ctx context.Context, id int32) error
+	GetAttachmentByID(ctx context.Context, arg GetAttachmentByIDParams) (*Attachment, error)
 	GetCounter(ctx context.Context) (*Counter, error)
 	IncrementCounter(ctx context.Context) error
+	ListAttachmentsByResource(ctx context.Context, arg ListAttachmentsByResourceParams) ([]*Attachment, error)
 	ListTodosByUser(ctx context.Context, userID int32) ([]*TodoItem, error)
 	NormalizeTodayToWeek(ctx context.Context, userID int32) error
 	NormalizeWeekToLater(ctx context.Context, userID int32) error

@@ -55,6 +55,35 @@ func (mr *MockModelInterfaceMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockModelInterface)(nil).Close))
 }
 
+// CreateAttachment mocks base method.
+func (m *MockModelInterface) CreateAttachment(ctx context.Context, arg querier.CreateAttachmentParams) (*querier.Attachment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAttachment", ctx, arg)
+	ret0, _ := ret[0].(*querier.Attachment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAttachment indicates an expected call of CreateAttachment.
+func (mr *MockModelInterfaceMockRecorder) CreateAttachment(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAttachment", reflect.TypeOf((*MockModelInterface)(nil).CreateAttachment), ctx, arg)
+}
+
+// CreateAttachmentLink mocks base method.
+func (m *MockModelInterface) CreateAttachmentLink(ctx context.Context, arg querier.CreateAttachmentLinkParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAttachmentLink", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAttachmentLink indicates an expected call of CreateAttachmentLink.
+func (mr *MockModelInterfaceMockRecorder) CreateAttachmentLink(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAttachmentLink", reflect.TypeOf((*MockModelInterface)(nil).CreateAttachmentLink), ctx, arg)
+}
+
 // CreateTodo mocks base method.
 func (m *MockModelInterface) CreateTodo(ctx context.Context, arg querier.CreateTodoParams) (*querier.TodoItem, error) {
 	m.ctrl.T.Helper()
@@ -68,6 +97,35 @@ func (m *MockModelInterface) CreateTodo(ctx context.Context, arg querier.CreateT
 func (mr *MockModelInterfaceMockRecorder) CreateTodo(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTodo", reflect.TypeOf((*MockModelInterface)(nil).CreateTodo), ctx, arg)
+}
+
+// DeleteAttachment mocks base method.
+func (m *MockModelInterface) DeleteAttachment(ctx context.Context, arg querier.DeleteAttachmentParams) (*querier.Attachment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAttachment", ctx, arg)
+	ret0, _ := ret[0].(*querier.Attachment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAttachment indicates an expected call of DeleteAttachment.
+func (mr *MockModelInterfaceMockRecorder) DeleteAttachment(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachment", reflect.TypeOf((*MockModelInterface)(nil).DeleteAttachment), ctx, arg)
+}
+
+// DeleteAttachmentLink mocks base method.
+func (m *MockModelInterface) DeleteAttachmentLink(ctx context.Context, arg querier.DeleteAttachmentLinkParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAttachmentLink", ctx, arg)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAttachmentLink indicates an expected call of DeleteAttachmentLink.
+func (mr *MockModelInterfaceMockRecorder) DeleteAttachmentLink(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachmentLink", reflect.TypeOf((*MockModelInterface)(nil).DeleteAttachmentLink), ctx, arg)
 }
 
 // DeleteTodo mocks base method.
@@ -97,6 +155,21 @@ func (m *MockModelInterface) EnsureUser(ctx context.Context, id int32) error {
 func (mr *MockModelInterfaceMockRecorder) EnsureUser(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureUser", reflect.TypeOf((*MockModelInterface)(nil).EnsureUser), ctx, id)
+}
+
+// GetAttachmentByID mocks base method.
+func (m *MockModelInterface) GetAttachmentByID(ctx context.Context, arg querier.GetAttachmentByIDParams) (*querier.Attachment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAttachmentByID", ctx, arg)
+	ret0, _ := ret[0].(*querier.Attachment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAttachmentByID indicates an expected call of GetAttachmentByID.
+func (mr *MockModelInterfaceMockRecorder) GetAttachmentByID(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAttachmentByID", reflect.TypeOf((*MockModelInterface)(nil).GetAttachmentByID), ctx, arg)
 }
 
 // GetCounter mocks base method.
@@ -140,6 +213,21 @@ func (m *MockModelInterface) IncrementCounter(ctx context.Context) error {
 func (mr *MockModelInterfaceMockRecorder) IncrementCounter(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrementCounter", reflect.TypeOf((*MockModelInterface)(nil).IncrementCounter), ctx)
+}
+
+// ListAttachmentsByResource mocks base method.
+func (m *MockModelInterface) ListAttachmentsByResource(ctx context.Context, arg querier.ListAttachmentsByResourceParams) ([]*querier.Attachment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAttachmentsByResource", ctx, arg)
+	ret0, _ := ret[0].([]*querier.Attachment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAttachmentsByResource indicates an expected call of ListAttachmentsByResource.
+func (mr *MockModelInterfaceMockRecorder) ListAttachmentsByResource(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAttachmentsByResource", reflect.TypeOf((*MockModelInterface)(nil).ListAttachmentsByResource), ctx, arg)
 }
 
 // ListTodosByUser mocks base method.

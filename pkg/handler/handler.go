@@ -15,16 +15,18 @@ import (
 )
 
 type Handler struct {
-	model      model.ModelInterface
-	taskrunner taskgen.TaskRunner
-	todos      TodoService
+	model       model.ModelInterface
+	taskrunner  taskgen.TaskRunner
+	todos       TodoService
+	attachments AttachmentService
 }
 
 func NewHandler(model model.ModelInterface, taskrunner taskgen.TaskRunner) (apigen.ServerInterface, error) {
 	return &Handler{
-		model:      model,
-		taskrunner: taskrunner,
-		todos:      NewTodoService(model),
+		model:       model,
+		taskrunner:  taskrunner,
+		todos:       NewTodoService(model),
+		attachments: NewAttachmentService(model, LoadAttachmentConfig()),
 	}, nil
 }
 

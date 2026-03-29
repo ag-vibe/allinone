@@ -37,6 +37,16 @@ const (
 	UpdateTodoRequestBucketWeek  UpdateTodoRequestBucket = "week"
 )
 
+// Attachment defines model for Attachment.
+type Attachment struct {
+	ContentType string             `json:"contentType"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	DownloadUrl string             `json:"downloadUrl"`
+	Filename    string             `json:"filename"`
+	Id          openapi_types.UUID `json:"id"`
+	SizeBytes   int64              `json:"sizeBytes"`
+}
+
 // Counter defines model for Counter.
 type Counter struct {
 	Count int32 `json:"count"`
@@ -45,6 +55,12 @@ type Counter struct {
 // CreateTodoRequest defines model for CreateTodoRequest.
 type CreateTodoRequest struct {
 	Title string `json:"title"`
+}
+
+// LinkAttachmentRequest defines model for LinkAttachmentRequest.
+type LinkAttachmentRequest struct {
+	ResourceId   openapi_types.UUID `json:"resourceId"`
+	ResourceType string             `json:"resourceType"`
 }
 
 // TodoItem defines model for TodoItem.
@@ -70,6 +86,20 @@ type UpdateTodoRequest struct {
 
 // UpdateTodoRequestBucket defines model for UpdateTodoRequest.Bucket.
 type UpdateTodoRequestBucket string
+
+// UploadAttachmentMultipartBody defines parameters for UploadAttachment.
+type UploadAttachmentMultipartBody struct {
+	File openapi_types.File `json:"file"`
+}
+
+// UploadAttachmentMultipartRequestBody defines body for UploadAttachment for multipart/form-data ContentType.
+type UploadAttachmentMultipartRequestBody UploadAttachmentMultipartBody
+
+// UnlinkAttachmentJSONRequestBody defines body for UnlinkAttachment for application/json ContentType.
+type UnlinkAttachmentJSONRequestBody = LinkAttachmentRequest
+
+// LinkAttachmentJSONRequestBody defines body for LinkAttachment for application/json ContentType.
+type LinkAttachmentJSONRequestBody = LinkAttachmentRequest
 
 // CreateTodoJSONRequestBody defines body for CreateTodo for application/json ContentType.
 type CreateTodoJSONRequestBody = CreateTodoRequest
@@ -150,11 +180,36 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// UploadAttachmentWithBody request with any body
+	UploadAttachmentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAttachment request
+	DeleteAttachment(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAttachment request
+	GetAttachment(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DownloadAttachment request
+	DownloadAttachment(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UnlinkAttachmentWithBody request with any body
+	UnlinkAttachmentWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UnlinkAttachment(ctx context.Context, id openapi_types.UUID, body UnlinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LinkAttachmentWithBody request with any body
+	LinkAttachmentWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	LinkAttachment(ctx context.Context, id openapi_types.UUID, body LinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetCounter request
 	GetCounter(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// IncrementCounter request
 	IncrementCounter(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAttachmentsByResource request
+	ListAttachmentsByResource(ctx context.Context, resourceType string, resourceId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListTodos request
 	ListTodos(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -173,6 +228,102 @@ type ClientInterface interface {
 	UpdateTodo(ctx context.Context, id openapi_types.UUID, body UpdateTodoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
+func (c *Client) UploadAttachmentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUploadAttachmentRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAttachment(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAttachmentRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAttachment(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAttachmentRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DownloadAttachment(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadAttachmentRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UnlinkAttachmentWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUnlinkAttachmentRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UnlinkAttachment(ctx context.Context, id openapi_types.UUID, body UnlinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUnlinkAttachmentRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LinkAttachmentWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLinkAttachmentRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LinkAttachment(ctx context.Context, id openapi_types.UUID, body LinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLinkAttachmentRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetCounter(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCounterRequest(c.Server)
 	if err != nil {
@@ -187,6 +338,18 @@ func (c *Client) GetCounter(ctx context.Context, reqEditors ...RequestEditorFn) 
 
 func (c *Client) IncrementCounter(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewIncrementCounterRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAttachmentsByResource(ctx context.Context, resourceType string, resourceId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAttachmentsByResourceRequest(c.Server, resourceType, resourceId)
 	if err != nil {
 		return nil, err
 	}
@@ -269,6 +432,231 @@ func (c *Client) UpdateTodo(ctx context.Context, id openapi_types.UUID, body Upd
 	return c.Client.Do(req)
 }
 
+// NewUploadAttachmentRequestWithBody generates requests for UploadAttachment with any type of body
+func NewUploadAttachmentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/attachments")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAttachmentRequest generates requests for DeleteAttachment
+func NewDeleteAttachmentRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/attachments/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAttachmentRequest generates requests for GetAttachment
+func NewGetAttachmentRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/attachments/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDownloadAttachmentRequest generates requests for DownloadAttachment
+func NewDownloadAttachmentRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/attachments/%s/content", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUnlinkAttachmentRequest calls the generic UnlinkAttachment builder with application/json body
+func NewUnlinkAttachmentRequest(server string, id openapi_types.UUID, body UnlinkAttachmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUnlinkAttachmentRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUnlinkAttachmentRequestWithBody generates requests for UnlinkAttachment with any type of body
+func NewUnlinkAttachmentRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/attachments/%s/links", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewLinkAttachmentRequest calls the generic LinkAttachment builder with application/json body
+func NewLinkAttachmentRequest(server string, id openapi_types.UUID, body LinkAttachmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLinkAttachmentRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewLinkAttachmentRequestWithBody generates requests for LinkAttachment with any type of body
+func NewLinkAttachmentRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/attachments/%s/links", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetCounterRequest generates requests for GetCounter
 func NewGetCounterRequest(server string) (*http.Request, error) {
 	var err error
@@ -316,6 +704,47 @@ func NewIncrementCounterRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAttachmentsByResourceRequest generates requests for ListAttachmentsByResource
+func NewListAttachmentsByResourceRequest(server string, resourceType string, resourceId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "resourceType", runtime.ParamLocationPath, resourceType)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "resourceId", runtime.ParamLocationPath, resourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/resources/%s/%s/attachments", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -514,11 +943,36 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// UploadAttachmentWithBodyWithResponse request with any body
+	UploadAttachmentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadAttachmentResponse, error)
+
+	// DeleteAttachmentWithResponse request
+	DeleteAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteAttachmentResponse, error)
+
+	// GetAttachmentWithResponse request
+	GetAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAttachmentResponse, error)
+
+	// DownloadAttachmentWithResponse request
+	DownloadAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DownloadAttachmentResponse, error)
+
+	// UnlinkAttachmentWithBodyWithResponse request with any body
+	UnlinkAttachmentWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UnlinkAttachmentResponse, error)
+
+	UnlinkAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, body UnlinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*UnlinkAttachmentResponse, error)
+
+	// LinkAttachmentWithBodyWithResponse request with any body
+	LinkAttachmentWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LinkAttachmentResponse, error)
+
+	LinkAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, body LinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*LinkAttachmentResponse, error)
+
 	// GetCounterWithResponse request
 	GetCounterWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCounterResponse, error)
 
 	// IncrementCounterWithResponse request
 	IncrementCounterWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*IncrementCounterResponse, error)
+
+	// ListAttachmentsByResourceWithResponse request
+	ListAttachmentsByResourceWithResponse(ctx context.Context, resourceType string, resourceId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListAttachmentsByResourceResponse, error)
 
 	// ListTodosWithResponse request
 	ListTodosWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListTodosResponse, error)
@@ -535,6 +989,134 @@ type ClientWithResponsesInterface interface {
 	UpdateTodoWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateTodoResponse, error)
 
 	UpdateTodoWithResponse(ctx context.Context, id openapi_types.UUID, body UpdateTodoJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateTodoResponse, error)
+}
+
+type UploadAttachmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *Attachment
+}
+
+// Status returns HTTPResponse.Status
+func (r UploadAttachmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UploadAttachmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAttachmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAttachmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAttachmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAttachmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Attachment
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAttachmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAttachmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DownloadAttachmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r DownloadAttachmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DownloadAttachmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UnlinkAttachmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r UnlinkAttachmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UnlinkAttachmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LinkAttachmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r LinkAttachmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LinkAttachmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type GetCounterResponse struct {
@@ -574,6 +1156,28 @@ func (r IncrementCounterResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r IncrementCounterResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAttachmentsByResourceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]Attachment
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAttachmentsByResourceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAttachmentsByResourceResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -667,6 +1271,76 @@ func (r UpdateTodoResponse) StatusCode() int {
 	return 0
 }
 
+// UploadAttachmentWithBodyWithResponse request with arbitrary body returning *UploadAttachmentResponse
+func (c *ClientWithResponses) UploadAttachmentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadAttachmentResponse, error) {
+	rsp, err := c.UploadAttachmentWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUploadAttachmentResponse(rsp)
+}
+
+// DeleteAttachmentWithResponse request returning *DeleteAttachmentResponse
+func (c *ClientWithResponses) DeleteAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteAttachmentResponse, error) {
+	rsp, err := c.DeleteAttachment(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAttachmentResponse(rsp)
+}
+
+// GetAttachmentWithResponse request returning *GetAttachmentResponse
+func (c *ClientWithResponses) GetAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAttachmentResponse, error) {
+	rsp, err := c.GetAttachment(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAttachmentResponse(rsp)
+}
+
+// DownloadAttachmentWithResponse request returning *DownloadAttachmentResponse
+func (c *ClientWithResponses) DownloadAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DownloadAttachmentResponse, error) {
+	rsp, err := c.DownloadAttachment(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDownloadAttachmentResponse(rsp)
+}
+
+// UnlinkAttachmentWithBodyWithResponse request with arbitrary body returning *UnlinkAttachmentResponse
+func (c *ClientWithResponses) UnlinkAttachmentWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UnlinkAttachmentResponse, error) {
+	rsp, err := c.UnlinkAttachmentWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUnlinkAttachmentResponse(rsp)
+}
+
+func (c *ClientWithResponses) UnlinkAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, body UnlinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*UnlinkAttachmentResponse, error) {
+	rsp, err := c.UnlinkAttachment(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUnlinkAttachmentResponse(rsp)
+}
+
+// LinkAttachmentWithBodyWithResponse request with arbitrary body returning *LinkAttachmentResponse
+func (c *ClientWithResponses) LinkAttachmentWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LinkAttachmentResponse, error) {
+	rsp, err := c.LinkAttachmentWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLinkAttachmentResponse(rsp)
+}
+
+func (c *ClientWithResponses) LinkAttachmentWithResponse(ctx context.Context, id openapi_types.UUID, body LinkAttachmentJSONRequestBody, reqEditors ...RequestEditorFn) (*LinkAttachmentResponse, error) {
+	rsp, err := c.LinkAttachment(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLinkAttachmentResponse(rsp)
+}
+
 // GetCounterWithResponse request returning *GetCounterResponse
 func (c *ClientWithResponses) GetCounterWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCounterResponse, error) {
 	rsp, err := c.GetCounter(ctx, reqEditors...)
@@ -683,6 +1357,15 @@ func (c *ClientWithResponses) IncrementCounterWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseIncrementCounterResponse(rsp)
+}
+
+// ListAttachmentsByResourceWithResponse request returning *ListAttachmentsByResourceResponse
+func (c *ClientWithResponses) ListAttachmentsByResourceWithResponse(ctx context.Context, resourceType string, resourceId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListAttachmentsByResourceResponse, error) {
+	rsp, err := c.ListAttachmentsByResource(ctx, resourceType, resourceId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAttachmentsByResourceResponse(rsp)
 }
 
 // ListTodosWithResponse request returning *ListTodosResponse
@@ -737,6 +1420,122 @@ func (c *ClientWithResponses) UpdateTodoWithResponse(ctx context.Context, id ope
 	return ParseUpdateTodoResponse(rsp)
 }
 
+// ParseUploadAttachmentResponse parses an HTTP response from a UploadAttachmentWithResponse call
+func ParseUploadAttachmentResponse(rsp *http.Response) (*UploadAttachmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UploadAttachmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Attachment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAttachmentResponse parses an HTTP response from a DeleteAttachmentWithResponse call
+func ParseDeleteAttachmentResponse(rsp *http.Response) (*DeleteAttachmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAttachmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetAttachmentResponse parses an HTTP response from a GetAttachmentWithResponse call
+func ParseGetAttachmentResponse(rsp *http.Response) (*GetAttachmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAttachmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Attachment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDownloadAttachmentResponse parses an HTTP response from a DownloadAttachmentWithResponse call
+func ParseDownloadAttachmentResponse(rsp *http.Response) (*DownloadAttachmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DownloadAttachmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseUnlinkAttachmentResponse parses an HTTP response from a UnlinkAttachmentWithResponse call
+func ParseUnlinkAttachmentResponse(rsp *http.Response) (*UnlinkAttachmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UnlinkAttachmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseLinkAttachmentResponse parses an HTTP response from a LinkAttachmentWithResponse call
+func ParseLinkAttachmentResponse(rsp *http.Response) (*LinkAttachmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LinkAttachmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
 // ParseGetCounterResponse parses an HTTP response from a GetCounterWithResponse call
 func ParseGetCounterResponse(rsp *http.Response) (*GetCounterResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -774,6 +1573,32 @@ func ParseIncrementCounterResponse(rsp *http.Response) (*IncrementCounterRespons
 	response := &IncrementCounterResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseListAttachmentsByResourceResponse parses an HTTP response from a ListAttachmentsByResourceWithResponse call
+func ParseListAttachmentsByResourceResponse(rsp *http.Response) (*ListAttachmentsByResourceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAttachmentsByResourceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Attachment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	}
 
 	return response, nil
@@ -875,12 +1700,33 @@ func ParseUpdateTodoResponse(rsp *http.Response) (*UpdateTodoResponse, error) {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Upload attachment
+	// (POST /attachments)
+	UploadAttachment(c *fiber.Ctx) error
+	// Delete attachment
+	// (DELETE /attachments/{id})
+	DeleteAttachment(c *fiber.Ctx, id openapi_types.UUID) error
+	// Get attachment metadata
+	// (GET /attachments/{id})
+	GetAttachment(c *fiber.Ctx, id openapi_types.UUID) error
+	// Download attachment content
+	// (GET /attachments/{id}/content)
+	DownloadAttachment(c *fiber.Ctx, id openapi_types.UUID) error
+	// Unlink attachment from a resource
+	// (DELETE /attachments/{id}/links)
+	UnlinkAttachment(c *fiber.Ctx, id openapi_types.UUID) error
+	// Link attachment to a resource
+	// (POST /attachments/{id}/links)
+	LinkAttachment(c *fiber.Ctx, id openapi_types.UUID) error
 	// Get Counter
 	// (GET /counter)
 	GetCounter(c *fiber.Ctx) error
 	// Increment Counter
 	// (POST /counter)
 	IncrementCounter(c *fiber.Ctx) error
+	// List attachments by resource
+	// (GET /resources/{resourceType}/{resourceId}/attachments)
+	ListAttachmentsByResource(c *fiber.Ctx, resourceType string, resourceId openapi_types.UUID) error
 	// List TODO items for current user
 	// (GET /todos)
 	ListTodos(c *fiber.Ctx) error
@@ -902,6 +1748,104 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc fiber.Handler
 
+// UploadAttachment operation middleware
+func (siw *ServerInterfaceWrapper) UploadAttachment(c *fiber.Ctx) error {
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.UploadAttachment(c)
+}
+
+// DeleteAttachment operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAttachment(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.DeleteAttachment(c, id)
+}
+
+// GetAttachment operation middleware
+func (siw *ServerInterfaceWrapper) GetAttachment(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.GetAttachment(c, id)
+}
+
+// DownloadAttachment operation middleware
+func (siw *ServerInterfaceWrapper) DownloadAttachment(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.DownloadAttachment(c, id)
+}
+
+// UnlinkAttachment operation middleware
+func (siw *ServerInterfaceWrapper) UnlinkAttachment(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.UnlinkAttachment(c, id)
+}
+
+// LinkAttachment operation middleware
+func (siw *ServerInterfaceWrapper) LinkAttachment(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.LinkAttachment(c, id)
+}
+
 // GetCounter operation middleware
 func (siw *ServerInterfaceWrapper) GetCounter(c *fiber.Ctx) error {
 
@@ -914,6 +1858,32 @@ func (siw *ServerInterfaceWrapper) IncrementCounter(c *fiber.Ctx) error {
 	c.Context().SetUserValue(BearerAuthScopes, []string{"x.OperationPermit(c, operationID)"})
 
 	return siw.Handler.IncrementCounter(c)
+}
+
+// ListAttachmentsByResource operation middleware
+func (siw *ServerInterfaceWrapper) ListAttachmentsByResource(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "resourceType" -------------
+	var resourceType string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "resourceType", c.Params("resourceType"), &resourceType, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter resourceType: %w", err).Error())
+	}
+
+	// ------------- Path parameter "resourceId" -------------
+	var resourceId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "resourceId", c.Params("resourceId"), &resourceId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter resourceId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.ListAttachmentsByResource(c, resourceType, resourceId)
 }
 
 // ListTodos operation middleware
@@ -989,9 +1959,23 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
+	router.Post(options.BaseURL+"/attachments", wrapper.UploadAttachment)
+
+	router.Delete(options.BaseURL+"/attachments/:id", wrapper.DeleteAttachment)
+
+	router.Get(options.BaseURL+"/attachments/:id", wrapper.GetAttachment)
+
+	router.Get(options.BaseURL+"/attachments/:id/content", wrapper.DownloadAttachment)
+
+	router.Delete(options.BaseURL+"/attachments/:id/links", wrapper.UnlinkAttachment)
+
+	router.Post(options.BaseURL+"/attachments/:id/links", wrapper.LinkAttachment)
+
 	router.Get(options.BaseURL+"/counter", wrapper.GetCounter)
 
 	router.Post(options.BaseURL+"/counter", wrapper.IncrementCounter)
+
+	router.Get(options.BaseURL+"/resources/:resourceType/:resourceId/attachments", wrapper.ListAttachmentsByResource)
 
 	router.Get(options.BaseURL+"/todos", wrapper.ListTodos)
 
