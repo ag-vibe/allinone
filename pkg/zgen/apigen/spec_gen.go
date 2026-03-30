@@ -58,7 +58,11 @@ type Counter struct {
 
 // CreateMemoRequest defines model for CreateMemoRequest.
 type CreateMemoRequest struct {
-	Content string `json:"content"`
+	Content    MemoContent `json:"content"`
+	Excerpt    string      `json:"excerpt"`
+	PlainText  string      `json:"plainText"`
+	References []uuid.UUID `json:"references"`
+	Tags       []string    `json:"tags"`
 }
 
 // CreateTodoRequest defines model for CreateTodoRequest.
@@ -75,14 +79,19 @@ type LinkAttachmentRequest struct {
 // Memo defines model for Memo.
 type Memo struct {
 	ArchivedAt *time.Time  `json:"archivedAt,omitempty"`
-	Content    string      `json:"content"`
+	Content    MemoContent `json:"content"`
 	CreatedAt  time.Time   `json:"createdAt"`
 	Excerpt    string      `json:"excerpt"`
 	Id         uuid.UUID   `json:"id"`
+	PlainText  string      `json:"plainText"`
 	References []uuid.UUID `json:"references"`
 	State      MemoState   `json:"state"`
 	Tags       []string    `json:"tags"`
 	UpdatedAt  time.Time   `json:"updatedAt"`
+}
+
+// MemoContent defines model for MemoContent.
+type MemoContent struct {
 }
 
 // MemoSummary defines model for MemoSummary.
@@ -91,6 +100,7 @@ type MemoSummary struct {
 	CreatedAt  time.Time  `json:"createdAt"`
 	Excerpt    string     `json:"excerpt"`
 	Id         uuid.UUID  `json:"id"`
+	PlainText  string     `json:"plainText"`
 	State      MemoState  `json:"state"`
 	Tags       []string   `json:"tags"`
 	UpdatedAt  time.Time  `json:"updatedAt"`
@@ -114,8 +124,12 @@ type TodoItem struct {
 
 // UpdateMemoRequest defines model for UpdateMemoRequest.
 type UpdateMemoRequest struct {
-	Content *string    `json:"content,omitempty"`
-	State   *MemoState `json:"state,omitempty"`
+	Content    MemoContent `json:"content"`
+	Excerpt    string      `json:"excerpt"`
+	PlainText  string      `json:"plainText"`
+	References []uuid.UUID `json:"references"`
+	State      *MemoState  `json:"state,omitempty"`
+	Tags       []string    `json:"tags"`
 }
 
 // UpdateTodoRequest defines model for UpdateTodoRequest.

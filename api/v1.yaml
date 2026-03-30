@@ -518,14 +518,23 @@ components:
       type: string
       enum: [active, archived]
 
+    MemoContent:
+      type: object
+      additionalProperties: true
+      x-go-type: "json.RawMessage"
+      x-go-type-imports:
+        - "encoding/json"
+
     Memo:
       type: object
-      required: [id, content, excerpt, state, tags, references, createdAt, updatedAt]
+      required: [id, content, plainText, excerpt, state, tags, references, createdAt, updatedAt]
       properties:
         id:
           type: string
           format: uuid
         content:
+          $ref: "#/components/schemas/MemoContent"
+        plainText:
           type: string
         excerpt:
           type: string
@@ -553,11 +562,13 @@ components:
 
     MemoSummary:
       type: object
-      required: [id, excerpt, state, tags, createdAt, updatedAt]
+      required: [id, plainText, excerpt, state, tags, createdAt, updatedAt]
       properties:
         id:
           type: string
           format: uuid
+        plainText:
+          type: string
         excerpt:
           type: string
         state:
@@ -639,16 +650,43 @@ components:
 
     CreateMemoRequest:
       type: object
-      required: [content]
+      required: [content, plainText, excerpt, tags, references]
       properties:
         content:
+          $ref: "#/components/schemas/MemoContent"
+        plainText:
           type: string
+        excerpt:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        references:
+          type: array
+          items:
+            type: string
+            format: uuid
 
     UpdateMemoRequest:
       type: object
+      required: [content, plainText, excerpt, tags, references]
       properties:
         content:
+          $ref: "#/components/schemas/MemoContent"
+        plainText:
           type: string
+        excerpt:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        references:
+          type: array
+          items:
+            type: string
+            format: uuid
         state:
           $ref: "#/components/schemas/MemoState"
 

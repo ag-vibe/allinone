@@ -5,6 +5,7 @@
 package querier
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,12 +38,13 @@ type Counter struct {
 type Memo struct {
 	ID         uuid.UUID
 	UserID     int32
-	Content    string
+	Content    json.RawMessage
 	Excerpt    string
 	State      string
 	ArchivedAt *time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+	PlainText  string
 }
 
 type MemoRelation struct {

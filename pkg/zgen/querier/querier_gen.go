@@ -13,7 +13,7 @@ import (
 type Querier interface {
 	CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (*Attachment, error)
 	CreateAttachmentLink(ctx context.Context, arg CreateAttachmentLinkParams) error
-	CreateMemo(ctx context.Context, arg CreateMemoParams) (*Memo, error)
+	CreateMemo(ctx context.Context, arg CreateMemoParams) (*CreateMemoRow, error)
 	CreateMemoRelation(ctx context.Context, arg CreateMemoRelationParams) error
 	CreateMemoTag(ctx context.Context, arg CreateMemoTagParams) error
 	CreateTodo(ctx context.Context, arg CreateTodoParams) (*TodoItem, error)
@@ -27,18 +27,18 @@ type Querier interface {
 	EnsureUser(ctx context.Context, id int32) error
 	GetAttachmentByID(ctx context.Context, arg GetAttachmentByIDParams) (*Attachment, error)
 	GetCounter(ctx context.Context) (*Counter, error)
-	GetMemoByID(ctx context.Context, arg GetMemoByIDParams) (*Memo, error)
+	GetMemoByID(ctx context.Context, arg GetMemoByIDParams) (*GetMemoByIDRow, error)
 	IncrementCounter(ctx context.Context) error
 	ListAttachmentsByResource(ctx context.Context, arg ListAttachmentsByResourceParams) ([]*Attachment, error)
-	ListMemoBacklinks(ctx context.Context, arg ListMemoBacklinksParams) ([]*Memo, error)
+	ListMemoBacklinks(ctx context.Context, arg ListMemoBacklinksParams) ([]*ListMemoBacklinksRow, error)
 	ListMemoReferenceIDsBySource(ctx context.Context, arg ListMemoReferenceIDsBySourceParams) ([]uuid.UUID, error)
 	ListMemoTagsByMemo(ctx context.Context, arg ListMemoTagsByMemoParams) ([]string, error)
-	ListMemos(ctx context.Context, arg ListMemosParams) ([]*Memo, error)
+	ListMemos(ctx context.Context, arg ListMemosParams) ([]*ListMemosRow, error)
 	ListTags(ctx context.Context, arg ListTagsParams) ([]*ListTagsRow, error)
 	ListTodosByUser(ctx context.Context, userID int32) ([]*TodoItem, error)
 	NormalizeTodayToWeek(ctx context.Context, userID int32) error
 	NormalizeWeekToLater(ctx context.Context, userID int32) error
-	UpdateMemo(ctx context.Context, arg UpdateMemoParams) (*Memo, error)
+	UpdateMemo(ctx context.Context, arg UpdateMemoParams) (*UpdateMemoRow, error)
 	UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoItem, error)
 	UpdateTodoBucket(ctx context.Context, arg UpdateTodoBucketParams) error
 }

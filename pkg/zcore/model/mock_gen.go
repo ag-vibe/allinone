@@ -85,10 +85,10 @@ func (mr *MockModelInterfaceMockRecorder) CreateAttachmentLink(ctx, arg any) *go
 }
 
 // CreateMemo mocks base method.
-func (m *MockModelInterface) CreateMemo(ctx context.Context, arg querier.CreateMemoParams) (*querier.Memo, error) {
+func (m *MockModelInterface) CreateMemo(ctx context.Context, arg querier.CreateMemoParams) (*querier.CreateMemoRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMemo", ctx, arg)
-	ret0, _ := ret[0].(*querier.Memo)
+	ret0, _ := ret[0].(*querier.CreateMemoRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -288,10 +288,10 @@ func (mr *MockModelInterfaceMockRecorder) GetCounter(ctx any) *gomock.Call {
 }
 
 // GetMemoByID mocks base method.
-func (m *MockModelInterface) GetMemoByID(ctx context.Context, arg querier.GetMemoByIDParams) (*querier.Memo, error) {
+func (m *MockModelInterface) GetMemoByID(ctx context.Context, arg querier.GetMemoByIDParams) (*querier.GetMemoByIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMemoByID", ctx, arg)
-	ret0, _ := ret[0].(*querier.Memo)
+	ret0, _ := ret[0].(*querier.GetMemoByIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -346,10 +346,10 @@ func (mr *MockModelInterfaceMockRecorder) ListAttachmentsByResource(ctx, arg any
 }
 
 // ListMemoBacklinks mocks base method.
-func (m *MockModelInterface) ListMemoBacklinks(ctx context.Context, arg querier.ListMemoBacklinksParams) ([]*querier.Memo, error) {
+func (m *MockModelInterface) ListMemoBacklinks(ctx context.Context, arg querier.ListMemoBacklinksParams) ([]*querier.ListMemoBacklinksRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMemoBacklinks", ctx, arg)
-	ret0, _ := ret[0].([]*querier.Memo)
+	ret0, _ := ret[0].([]*querier.ListMemoBacklinksRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -391,10 +391,10 @@ func (mr *MockModelInterfaceMockRecorder) ListMemoTagsByMemo(ctx, arg any) *gomo
 }
 
 // ListMemos mocks base method.
-func (m *MockModelInterface) ListMemos(ctx context.Context, arg querier.ListMemosParams) ([]*querier.Memo, error) {
+func (m *MockModelInterface) ListMemos(ctx context.Context, arg querier.ListMemosParams) ([]*querier.ListMemosRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMemos", ctx, arg)
-	ret0, _ := ret[0].([]*querier.Memo)
+	ret0, _ := ret[0].([]*querier.ListMemosRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -506,10 +506,10 @@ func (mr *MockModelInterfaceMockRecorder) SpawnWithTx(tx any) *gomock.Call {
 }
 
 // UpdateMemo mocks base method.
-func (m *MockModelInterface) UpdateMemo(ctx context.Context, arg querier.UpdateMemoParams) (*querier.Memo, error) {
+func (m *MockModelInterface) UpdateMemo(ctx context.Context, arg querier.UpdateMemoParams) (*querier.UpdateMemoRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateMemo", ctx, arg)
-	ret0, _ := ret[0].(*querier.Memo)
+	ret0, _ := ret[0].(*querier.UpdateMemoRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -20,6 +21,7 @@ func TestMemoService_CreateMemo(t *testing.T) {
 	ctx := context.Background()
 	userID := int32(7)
 	refID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	content := json.RawMessage(`{"root":{"type":"root","children":[],"version":1}}`)
 
 	ctrl := gomock.NewController(t)
 	m := model.NewMockModelInterfaceWithTransaction(ctrl)
@@ -27,16 +29,22 @@ func TestMemoService_CreateMemo(t *testing.T) {
 
 	gomock.InOrder(
 		m.EXPECT().EnsureUser(ctx, userID).Return(nil),
-		m.EXPECT().GetMemoByID(ctx, querier.GetMemoByIDParams{ID: refID, UserID: userID}).Return(&querier.Memo{ID: refID, UserID: userID}, nil),
-		m.EXPECT().CreateMemo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.CreateMemoParams) (*querier.Memo, error) {
+		m.EXPECT().GetMemoByID(ctx, querier.GetMemoByIDParams{ID: refID, UserID: userID}).Return(&querier.GetMemoByIDRow{ID: refID, UserID: userID}, nil),
+		m.EXPECT().CreateMemo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.CreateMemoParams) (*querier.CreateMemoRow, error) {
 			createdID = arg.ID
-			if arg.Content != "Hello #work [[memo:"+refID.String()+"]] #Go" {
+			if string(arg.Content) != string(content) {
 				t.Fatalf("unexpected content: %q", arg.Content)
+			}
+			if arg.PlainText != "Hello\nworld" {
+				t.Fatalf("unexpected plain text: %q", arg.PlainText)
+			}
+			if arg.Excerpt != "Hello world" {
+				t.Fatalf("unexpected excerpt: %q", arg.Excerpt)
 			}
 			if arg.State != "active" {
 				t.Fatalf("unexpected state: %q", arg.State)
 			}
-			return &querier.Memo{ID: arg.ID, UserID: arg.UserID, Content: arg.Content, Excerpt: arg.Excerpt, State: arg.State}, nil
+			return &querier.CreateMemoRow{ID: arg.ID, UserID: arg.UserID, Content: arg.Content, PlainText: arg.PlainText, Excerpt: arg.Excerpt, State: arg.State}, nil
 		}),
 	)
 	gomock.InOrder(
@@ -73,7 +81,7 @@ func TestMemoService_CreateMemo(t *testing.T) {
 	)
 
 	svc := NewMemoService(m)
-	item, err := svc.CreateMemo(ctx, userID, "  Hello #work [[memo:"+refID.String()+"]] #Go  ")
+	item, err := svc.CreateMemo(ctx, userID, content, "  Hello\r\nworld  ", "  Hello world  ", []string{"work", "Go", "work"}, []uuid.UUID{refID, refID})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -91,6 +99,7 @@ func TestMemoService_CreateMemo_InvalidReference(t *testing.T) {
 	ctx := context.Background()
 	userID := int32(7)
 	refID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	content := json.RawMessage(`{"root":{"type":"root","children":[],"version":1}}`)
 
 	ctrl := gomock.NewController(t)
 	m := model.NewMockModelInterfaceWithTransaction(ctrl)
@@ -98,7 +107,7 @@ func TestMemoService_CreateMemo_InvalidReference(t *testing.T) {
 	m.EXPECT().GetMemoByID(ctx, querier.GetMemoByIDParams{ID: refID, UserID: userID}).Return(nil, pgx.ErrNoRows)
 
 	svc := NewMemoService(m)
-	_, err := svc.CreateMemo(ctx, userID, "hello [[memo:"+refID.String()+"]]")
+	_, err := svc.CreateMemo(ctx, userID, content, "hello", "hello", nil, []uuid.UUID{refID})
 	if !errors.Is(err, ErrInvalidMemoReference) {
 		t.Fatalf("expected invalid reference error, got %v", err)
 	}
@@ -110,26 +119,27 @@ func TestMemoService_UpdateMemo_Archive(t *testing.T) {
 	ctx := context.Background()
 	userID := int32(9)
 	memoID := uuid.MustParse("22222222-2222-2222-2222-222222222222")
+	content := json.RawMessage(`{"root":{"type":"root","children":[],"version":1}}`)
 
 	ctrl := gomock.NewController(t)
 	m := model.NewMockModelInterfaceWithTransaction(ctrl)
 	m.EXPECT().EnsureUser(ctx, userID).Return(nil)
-	m.EXPECT().GetMemoByID(ctx, querier.GetMemoByIDParams{ID: memoID, UserID: userID}).Return(&querier.Memo{ID: memoID, UserID: userID, Content: "hello", State: "active"}, nil)
-	m.EXPECT().UpdateMemo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.UpdateMemoParams) (*querier.Memo, error) {
+	m.EXPECT().GetMemoByID(ctx, querier.GetMemoByIDParams{ID: memoID, UserID: userID}).Return(&querier.GetMemoByIDRow{ID: memoID, UserID: userID, Content: content, State: "active"}, nil)
+	m.EXPECT().UpdateMemo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.UpdateMemoParams) (*querier.UpdateMemoRow, error) {
 		if arg.State != "archived" {
 			t.Fatalf("unexpected state: %q", arg.State)
 		}
 		if arg.ArchivedAt == nil || arg.ArchivedAt.IsZero() {
 			t.Fatal("expected archived_at")
 		}
-		return &querier.Memo{ID: memoID, UserID: userID, Content: arg.Content, Excerpt: arg.Excerpt, State: arg.State, ArchivedAt: arg.ArchivedAt, UpdatedAt: time.Now().UTC()}, nil
+		return &querier.UpdateMemoRow{ID: memoID, UserID: userID, Content: arg.Content, PlainText: arg.PlainText, Excerpt: arg.Excerpt, State: arg.State, ArchivedAt: arg.ArchivedAt, UpdatedAt: time.Now().UTC()}, nil
 	})
 	m.EXPECT().DeleteMemoTagsByMemo(ctx, querier.DeleteMemoTagsByMemoParams{MemoID: memoID, UserID: userID}).Return(nil)
 	m.EXPECT().DeleteMemoRelationsBySource(ctx, querier.DeleteMemoRelationsBySourceParams{SourceMemoID: memoID, UserID: userID}).Return(nil)
 
 	state := "archived"
 	svc := NewMemoService(m)
-	item, err := svc.UpdateMemo(ctx, userID, memoID, nil, &state)
+	item, err := svc.UpdateMemo(ctx, userID, memoID, content, "hello", "hello", nil, nil, &state)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

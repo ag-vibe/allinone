@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"regexp"
+	"bytes"
+	"encoding/json"
 	"sort"
 	"strings"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
@@ -12,83 +12,35 @@ import (
 
 const memoExcerptLimit = 140
 
-var (
-	memoRefPattern      = regexp.MustCompile(`\[\[memo:([0-9a-fA-F-]{36})\]\]`)
-	markdownLinkPattern = regexp.MustCompile(`!?\[([^\]]+)\]\([^\)]+\)`)
-	whitespacePattern   = regexp.MustCompile(`\s+`)
-)
-
-type parsedMemoContent struct {
-	Tags         []string
-	ReferenceIDs []uuid.UUID
-	Excerpt      string
+func validateMemoContent(content json.RawMessage) error {
+	trimmed := bytes.TrimSpace(content)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		return ErrInvalidMemoContent
+	}
+	return nil
 }
 
-func parseMemoContent(content string) parsedMemoContent {
-	return parsedMemoContent{
-		Tags:         extractTags(content),
-		ReferenceIDs: extractMemoReferenceIDs(content),
-		Excerpt:      buildMemoExcerpt(content),
-	}
+func normalizeMemoText(text string) string {
+	return strings.TrimSpace(strings.ReplaceAll(text, "\r\n", "\n"))
 }
 
-func extractMemoReferenceIDs(content string) []uuid.UUID {
-	matches := memoRefPattern.FindAllStringSubmatch(content, -1)
-	if len(matches) == 0 {
-		return nil
+func normalizeMemoExcerpt(excerpt string) string {
+	excerpt = normalizeMemoText(excerpt)
+	if excerpt == "" {
+		return ""
 	}
-
-	seen := make(map[uuid.UUID]struct{}, len(matches))
-	refs := make([]uuid.UUID, 0, len(matches))
-	for _, match := range matches {
-		id, err := uuid.Parse(match[1])
-		if err != nil {
-			continue
-		}
-		if _, ok := seen[id]; ok {
-			continue
-		}
-		seen[id] = struct{}{}
-		refs = append(refs, id)
+	if utf8.RuneCountInString(excerpt) <= memoExcerptLimit {
+		return excerpt
 	}
-	return refs
+	runes := []rune(excerpt)
+	return string(runes[:memoExcerptLimit])
 }
 
-func extractTags(content string) []string {
-	runes := []rune(content)
+func normalizeMemoTags(tags []string) []string {
 	seen := map[string]struct{}{}
-	tags := make([]string, 0)
-
-	for i := 0; i < len(runes); i++ {
-		if runes[i] != '#' {
-			continue
-		}
-		if i > 0 && isTagBodyRune(runes[i-1]) {
-			continue
-		}
-
-		j := i + 1
-		segmentStart := j
-		for j < len(runes) && isTagAtomRune(runes[j]) {
-			j++
-		}
-		if j == segmentStart {
-			continue
-		}
-
-		for j < len(runes) && runes[j] == '/' {
-			next := j + 1
-			segmentStart = next
-			for next < len(runes) && isTagAtomRune(runes[next]) {
-				next++
-			}
-			if next == segmentStart {
-				break
-			}
-			j = next
-		}
-
-		tag := canonicalizeTag(string(runes[i+1 : j]))
+	normalized := make([]string, 0, len(tags))
+	for _, raw := range tags {
+		tag := canonicalizeTag(raw)
 		if tag == "" {
 			continue
 		}
@@ -96,12 +48,29 @@ func extractTags(content string) []string {
 			continue
 		}
 		seen[tag] = struct{}{}
-		tags = append(tags, tag)
-		i = j - 1
+		normalized = append(normalized, tag)
 	}
+	sort.Strings(normalized)
+	return normalized
+}
 
-	sort.Strings(tags)
-	return tags
+func normalizeMemoReferences(refs []uuid.UUID) []uuid.UUID {
+	if len(refs) == 0 {
+		return nil
+	}
+	seen := make(map[uuid.UUID]struct{}, len(refs))
+	normalized := make([]uuid.UUID, 0, len(refs))
+	for _, ref := range refs {
+		if ref == uuid.Nil {
+			continue
+		}
+		if _, ok := seen[ref]; ok {
+			continue
+		}
+		seen[ref] = struct{}{}
+		normalized = append(normalized, ref)
+	}
+	return normalized
 }
 
 func canonicalizeTag(raw string) string {
@@ -119,36 +88,4 @@ func canonicalizeTag(raw string) string {
 		clean = append(clean, strings.ToLower(part))
 	}
 	return strings.Join(clean, "/")
-}
-
-func isTagAtomRune(r rune) bool {
-	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-'
-}
-
-func isTagBodyRune(r rune) bool {
-	return isTagAtomRune(r) || r == '/'
-}
-
-func buildMemoExcerpt(content string) string {
-	text := memoRefPattern.ReplaceAllString(content, " ")
-	text = markdownLinkPattern.ReplaceAllString(text, "$1")
-	text = strings.NewReplacer(
-		"`", " ",
-		"*", " ",
-		"_", " ",
-		">", " ",
-		"~", " ",
-	).Replace(text)
-	text = whitespacePattern.ReplaceAllString(text, " ")
-	text = strings.TrimSpace(text)
-	if text == "" {
-		return ""
-	}
-
-	if utf8.RuneCountInString(text) <= memoExcerptLimit {
-		return text
-	}
-
-	runes := []rune(text)
-	return string(runes[:memoExcerptLimit])
 }

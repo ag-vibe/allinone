@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
+	"time"
 
 	anclaxauth "github.com/cloudcarver/anclax/pkg/auth"
 	"github.com/gofiber/fiber/v3"
@@ -10,6 +12,39 @@ import (
 	"github.com/wibus-wee/allinone/pkg/zgen/apigen"
 	"github.com/wibus-wee/allinone/pkg/zgen/querier"
 )
+
+type memoUpsertRequest struct {
+	Content    json.RawMessage `json:"content"`
+	PlainText  string          `json:"plainText"`
+	Excerpt    string          `json:"excerpt"`
+	Tags       []string        `json:"tags"`
+	References []uuid.UUID     `json:"references"`
+	State      *string         `json:"state,omitempty"`
+}
+
+type memoResponse struct {
+	ArchivedAt *time.Time      `json:"archivedAt,omitempty"`
+	Content    json.RawMessage `json:"content"`
+	CreatedAt  time.Time       `json:"createdAt"`
+	Excerpt    string          `json:"excerpt"`
+	Id         uuid.UUID       `json:"id"`
+	PlainText  string          `json:"plainText"`
+	References []uuid.UUID     `json:"references"`
+	State      string          `json:"state"`
+	Tags       []string        `json:"tags"`
+	UpdatedAt  time.Time       `json:"updatedAt"`
+}
+
+type memoSummaryResponse struct {
+	ArchivedAt *time.Time `json:"archivedAt,omitempty"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	Excerpt    string     `json:"excerpt"`
+	Id         uuid.UUID  `json:"id"`
+	PlainText  string     `json:"plainText"`
+	State      string     `json:"state"`
+	Tags       []string   `json:"tags"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
+}
 
 func (h *Handler) ListMemos(c fiber.Ctx, params apigen.ListMemosParams) error {
 	userID, err := anclaxauth.GetUserID(c)
@@ -42,7 +77,7 @@ func (h *Handler) ListMemos(c fiber.Ctx, params apigen.ListMemosParams) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	result := make([]apigen.MemoSummary, 0, len(items))
+	result := make([]memoSummaryResponse, 0, len(items))
 	for _, item := range items {
 		result = append(result, mapMemoSummaryToAPI(item))
 	}
@@ -55,12 +90,11 @@ func (h *Handler) CreateMemo(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
 	}
 
-	var req apigen.CreateMemoRequest
+	var req memoUpsertRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
-
-	item, err := h.memos.CreateMemo(c.Context(), userID, req.Content)
+	item, err := h.memos.CreateMemo(c.Context(), userID, req.Content, req.PlainText, req.Excerpt, req.Tags, req.References)
 	if errors.Is(err, ErrInvalidMemoContent) {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
@@ -71,7 +105,11 @@ func (h *Handler) CreateMemo(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(mapMemoToAPI(item))
+	result, err := mapMemoToAPI(item)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.Status(fiber.StatusCreated).JSON(result)
 }
 
 func (h *Handler) GetMemo(c fiber.Ctx, id uuid.UUID) error {
@@ -88,7 +126,11 @@ func (h *Handler) GetMemo(c fiber.Ctx, id uuid.UUID) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	return c.JSON(mapMemoToAPI(item))
+	result, err := mapMemoToAPI(item)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.JSON(result)
 }
 
 func (h *Handler) UpdateMemo(c fiber.Ctx, id uuid.UUID) error {
@@ -97,18 +139,22 @@ func (h *Handler) UpdateMemo(c fiber.Ctx, id uuid.UUID) error {
 		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
 	}
 
-	var req apigen.UpdateMemoRequest
+	var req memoUpsertRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	var state *string
-	if req.State != nil {
-		value := string(*req.State)
-		state = &value
-	}
-
-	item, err := h.memos.UpdateMemo(c.Context(), userID, id, req.Content, state)
+	item, err := h.memos.UpdateMemo(
+		c.Context(),
+		userID,
+		id,
+		req.Content,
+		req.PlainText,
+		req.Excerpt,
+		req.Tags,
+		req.References,
+		req.State,
+	)
 	switch {
 	case errors.Is(err, ErrMemoNotFound):
 		return c.SendStatus(fiber.StatusNotFound)
@@ -120,7 +166,11 @@ func (h *Handler) UpdateMemo(c fiber.Ctx, id uuid.UUID) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	return c.JSON(mapMemoToAPI(item))
+	result, err := mapMemoToAPI(item)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.JSON(result)
 }
 
 func (h *Handler) DeleteMemo(c fiber.Ctx, id uuid.UUID) error {
@@ -153,7 +203,7 @@ func (h *Handler) ListMemoBacklinks(c fiber.Ctx, id uuid.UUID) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	result := make([]apigen.MemoSummary, 0, len(items))
+	result := make([]memoSummaryResponse, 0, len(items))
 	for _, item := range items {
 		result = append(result, mapMemoSummaryToAPI(item))
 	}
@@ -189,34 +239,50 @@ func (h *Handler) ListTags(c fiber.Ctx, params apigen.ListTagsParams) error {
 	return c.JSON(result)
 }
 
-func mapMemoToAPI(item *HydratedMemo) apigen.Memo {
-	references := make([]uuid.UUID, 0, len(item.References))
-	for _, ref := range item.References {
-		references = append(references, ref)
+func mapMemoToAPI(item *HydratedMemo) (memoResponse, error) {
+	content := item.Item.Content
+	if len(content) == 0 {
+		content = json.RawMessage(`{}`)
 	}
-	return apigen.Memo{
+	return memoResponse{
 		ArchivedAt: item.Item.ArchivedAt,
-		Content:    item.Item.Content,
+		Content:    content,
 		CreatedAt:  item.Item.CreatedAt,
 		Excerpt:    item.Item.Excerpt,
 		Id:         item.Item.ID,
-		References: references,
-		State:      apigen.MemoState(item.Item.State),
-		Tags:       append([]string(nil), item.Tags...),
+		PlainText:  item.Item.PlainText,
+		References: nonNilUUIDs(item.References),
+		State:      item.Item.State,
+		Tags:       nonNilStrings(item.Tags),
+		UpdatedAt:  item.Item.UpdatedAt,
+	}, nil
+}
+
+func mapMemoSummaryToAPI(item *HydratedMemoSummary) memoSummaryResponse {
+	return memoSummaryResponse{
+		ArchivedAt: item.Item.ArchivedAt,
+		CreatedAt:  item.Item.CreatedAt,
+		Excerpt:    item.Item.Excerpt,
+		Id:         item.Item.ID,
+		PlainText:  item.Item.PlainText,
+		State:      item.Item.State,
+		Tags:       nonNilStrings(item.Tags),
 		UpdatedAt:  item.Item.UpdatedAt,
 	}
 }
 
-func mapMemoSummaryToAPI(item *HydratedMemoSummary) apigen.MemoSummary {
-	return apigen.MemoSummary{
-		ArchivedAt: item.Item.ArchivedAt,
-		CreatedAt:  item.Item.CreatedAt,
-		Excerpt:    item.Item.Excerpt,
-		Id:         item.Item.ID,
-		State:      apigen.MemoState(item.Item.State),
-		Tags:       append([]string(nil), item.Tags...),
-		UpdatedAt:  item.Item.UpdatedAt,
+func nonNilStrings(values []string) []string {
+	if len(values) == 0 {
+		return []string{}
 	}
+	return append([]string(nil), values...)
+}
+
+func nonNilUUIDs(values []uuid.UUID) []uuid.UUID {
+	if len(values) == 0 {
+		return []uuid.UUID{}
+	}
+	return append([]uuid.UUID(nil), values...)
 }
 
 func mapTagSummaryToAPI(item *querier.ListTagsRow) apigen.TagSummary {

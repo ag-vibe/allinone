@@ -7,40 +7,56 @@ package querier
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 const createMemo = `-- name: CreateMemo :one
-INSERT INTO memos (id, user_id, content, excerpt, state, archived_at)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, user_id, content, excerpt, state, archived_at, created_at, updated_at
+INSERT INTO memos (id, user_id, content, plain_text, excerpt, state, archived_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, user_id, content, plain_text, excerpt, state, archived_at, created_at, updated_at
 `
 
 type CreateMemoParams struct {
 	ID         uuid.UUID
 	UserID     int32
-	Content    string
+	Content    json.RawMessage
+	PlainText  string
 	Excerpt    string
 	State      string
 	ArchivedAt *time.Time
 }
 
-func (q *Queries) CreateMemo(ctx context.Context, arg CreateMemoParams) (*Memo, error) {
+type CreateMemoRow struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    json.RawMessage
+	PlainText  string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func (q *Queries) CreateMemo(ctx context.Context, arg CreateMemoParams) (*CreateMemoRow, error) {
 	row := q.db.QueryRow(ctx, createMemo,
 		arg.ID,
 		arg.UserID,
 		arg.Content,
+		arg.PlainText,
 		arg.Excerpt,
 		arg.State,
 		arg.ArchivedAt,
 	)
-	var i Memo
+	var i CreateMemoRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Content,
+		&i.PlainText,
 		&i.Excerpt,
 		&i.State,
 		&i.ArchivedAt,
@@ -69,7 +85,7 @@ func (q *Queries) DeleteMemo(ctx context.Context, arg DeleteMemoParams) (uuid.UU
 }
 
 const getMemoByID = `-- name: GetMemoByID :one
-SELECT id, user_id, content, excerpt, state, archived_at, created_at, updated_at
+SELECT id, user_id, content, plain_text, excerpt, state, archived_at, created_at, updated_at
 FROM memos
 WHERE id = $1 AND user_id = $2
 `
@@ -79,13 +95,26 @@ type GetMemoByIDParams struct {
 	UserID int32
 }
 
-func (q *Queries) GetMemoByID(ctx context.Context, arg GetMemoByIDParams) (*Memo, error) {
+type GetMemoByIDRow struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    json.RawMessage
+	PlainText  string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func (q *Queries) GetMemoByID(ctx context.Context, arg GetMemoByIDParams) (*GetMemoByIDRow, error) {
 	row := q.db.QueryRow(ctx, getMemoByID, arg.ID, arg.UserID)
-	var i Memo
+	var i GetMemoByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Content,
+		&i.PlainText,
 		&i.Excerpt,
 		&i.State,
 		&i.ArchivedAt,
@@ -96,7 +125,7 @@ func (q *Queries) GetMemoByID(ctx context.Context, arg GetMemoByIDParams) (*Memo
 }
 
 const listMemoBacklinks = `-- name: ListMemoBacklinks :many
-SELECT m.id, m.user_id, m.content, m.excerpt, m.state, m.archived_at, m.created_at, m.updated_at
+SELECT m.id, m.user_id, m.content, m.plain_text, m.excerpt, m.state, m.archived_at, m.created_at, m.updated_at
 FROM memo_relations r
 JOIN memos m ON m.id = r.source_memo_id AND m.user_id = r.user_id
 WHERE r.user_id = $1 AND r.target_memo_id = $2
@@ -108,19 +137,32 @@ type ListMemoBacklinksParams struct {
 	TargetMemoID uuid.UUID
 }
 
-func (q *Queries) ListMemoBacklinks(ctx context.Context, arg ListMemoBacklinksParams) ([]*Memo, error) {
+type ListMemoBacklinksRow struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    json.RawMessage
+	PlainText  string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func (q *Queries) ListMemoBacklinks(ctx context.Context, arg ListMemoBacklinksParams) ([]*ListMemoBacklinksRow, error) {
 	rows, err := q.db.Query(ctx, listMemoBacklinks, arg.UserID, arg.TargetMemoID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []*Memo
+	var items []*ListMemoBacklinksRow
 	for rows.Next() {
-		var i Memo
+		var i ListMemoBacklinksRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
 			&i.Content,
+			&i.PlainText,
 			&i.Excerpt,
 			&i.State,
 			&i.ArchivedAt,
@@ -138,11 +180,11 @@ func (q *Queries) ListMemoBacklinks(ctx context.Context, arg ListMemoBacklinksPa
 }
 
 const listMemos = `-- name: ListMemos :many
-SELECT id, user_id, content, excerpt, state, archived_at, created_at, updated_at
+SELECT id, user_id, content, plain_text, excerpt, state, archived_at, created_at, updated_at
 FROM memos m
 WHERE m.user_id = $1
   AND ($2::text = '' OR m.state = $2)
-  AND ($3::text = '' OR m.content ILIKE '%' || $3 || '%' OR m.excerpt ILIKE '%' || $3 || '%')
+  AND ($3::text = '' OR m.plain_text ILIKE '%' || $3 || '%')
   AND (
     $4::text = ''
     OR EXISTS (
@@ -166,7 +208,19 @@ type ListMemosParams struct {
 	Offset  int32
 }
 
-func (q *Queries) ListMemos(ctx context.Context, arg ListMemosParams) ([]*Memo, error) {
+type ListMemosRow struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    json.RawMessage
+	PlainText  string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func (q *Queries) ListMemos(ctx context.Context, arg ListMemosParams) ([]*ListMemosRow, error) {
 	rows, err := q.db.Query(ctx, listMemos,
 		arg.UserID,
 		arg.Column2,
@@ -179,13 +233,14 @@ func (q *Queries) ListMemos(ctx context.Context, arg ListMemosParams) ([]*Memo, 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []*Memo
+	var items []*ListMemosRow
 	for rows.Next() {
-		var i Memo
+		var i ListMemosRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
 			&i.Content,
+			&i.PlainText,
 			&i.Excerpt,
 			&i.State,
 			&i.ArchivedAt,
@@ -205,37 +260,53 @@ func (q *Queries) ListMemos(ctx context.Context, arg ListMemosParams) ([]*Memo, 
 const updateMemo = `-- name: UpdateMemo :one
 UPDATE memos
 SET content = $3,
-    excerpt = $4,
-    state = $5,
-    archived_at = $6,
+    plain_text = $4,
+    excerpt = $5,
+    state = $6,
+    archived_at = $7,
     updated_at = now()
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, content, excerpt, state, archived_at, created_at, updated_at
+RETURNING id, user_id, content, plain_text, excerpt, state, archived_at, created_at, updated_at
 `
 
 type UpdateMemoParams struct {
 	ID         uuid.UUID
 	UserID     int32
-	Content    string
+	Content    json.RawMessage
+	PlainText  string
 	Excerpt    string
 	State      string
 	ArchivedAt *time.Time
 }
 
-func (q *Queries) UpdateMemo(ctx context.Context, arg UpdateMemoParams) (*Memo, error) {
+type UpdateMemoRow struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    json.RawMessage
+	PlainText  string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func (q *Queries) UpdateMemo(ctx context.Context, arg UpdateMemoParams) (*UpdateMemoRow, error) {
 	row := q.db.QueryRow(ctx, updateMemo,
 		arg.ID,
 		arg.UserID,
 		arg.Content,
+		arg.PlainText,
 		arg.Excerpt,
 		arg.State,
 		arg.ArchivedAt,
 	)
-	var i Memo
+	var i UpdateMemoRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Content,
+		&i.PlainText,
 		&i.Excerpt,
 		&i.State,
 		&i.ArchivedAt,

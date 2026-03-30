@@ -40,9 +40,26 @@ components:
         CreateMemoRequest:
             properties:
                 content:
+                    $ref: '#/components/schemas/MemoContent'
+                excerpt:
                     type: string
+                plainText:
+                    type: string
+                references:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                tags:
+                    items:
+                        type: string
+                    type: array
             required:
                 - content
+                - plainText
+                - excerpt
+                - tags
+                - references
             type: object
         CreateTodoRequest:
             properties:
@@ -69,7 +86,7 @@ components:
                     nullable: true
                     type: string
                 content:
-                    type: string
+                    $ref: '#/components/schemas/MemoContent'
                 createdAt:
                     format: date-time
                     type: string
@@ -77,6 +94,8 @@ components:
                     type: string
                 id:
                     format: uuid
+                    type: string
+                plainText:
                     type: string
                 references:
                     items:
@@ -95,12 +114,16 @@ components:
             required:
                 - id
                 - content
+                - plainText
                 - excerpt
                 - state
                 - tags
                 - references
                 - createdAt
                 - updatedAt
+            type: object
+        MemoContent:
+            additionalProperties: true
             type: object
         MemoState:
             enum:
@@ -121,6 +144,8 @@ components:
                 id:
                     format: uuid
                     type: string
+                plainText:
+                    type: string
                 state:
                     $ref: '#/components/schemas/MemoState'
                 tags:
@@ -132,6 +157,7 @@ components:
                     type: string
             required:
                 - id
+                - plainText
                 - excerpt
                 - state
                 - tags
@@ -180,9 +206,22 @@ components:
         UpdateMemoRequest:
             properties:
                 content:
+                    $ref: '#/components/schemas/MemoContent'
+                excerpt:
                     type: string
+                plainText:
+                    type: string
+                references:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
                 state:
                     $ref: '#/components/schemas/MemoState'
+                tags:
+                    items:
+                        type: string
+                    type: array
             type: object
         UpdateTodoRequest:
             properties:

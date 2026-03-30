@@ -12,11 +12,6 @@ oapi-codegen:
 wire:
   path: ./wire
 
-xware:
-  path: api/v1.yaml
-  out: pkg/zgen/apigen/scopes_extend_gen.go
-  package: apigen
-
 task-handler:
   path: api/tasks.yaml
   package: taskgen

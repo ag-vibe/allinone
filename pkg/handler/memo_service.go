@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -18,8 +19,8 @@ const memoResourceType = "memo"
 type MemoService interface {
 	ListMemos(ctx context.Context, userID int32, filter MemoListFilter) ([]*HydratedMemoSummary, error)
 	GetMemo(ctx context.Context, userID int32, id uuid.UUID) (*HydratedMemo, error)
-	CreateMemo(ctx context.Context, userID int32, content string) (*HydratedMemo, error)
-	UpdateMemo(ctx context.Context, userID int32, id uuid.UUID, content *string, state *string) (*HydratedMemo, error)
+	CreateMemo(ctx context.Context, userID int32, content json.RawMessage, plainText string, excerpt string, tags []string, references []uuid.UUID) (*HydratedMemo, error)
+	UpdateMemo(ctx context.Context, userID int32, id uuid.UUID, content json.RawMessage, plainText string, excerpt string, tags []string, references []uuid.UUID, state *string) (*HydratedMemo, error)
 	DeleteMemo(ctx context.Context, userID int32, id uuid.UUID) error
 	ListMemoBacklinks(ctx context.Context, userID int32, id uuid.UUID) ([]*HydratedMemoSummary, error)
 	ListTags(ctx context.Context, userID int32, filter TagListFilter) ([]*querier.ListTagsRow, error)
@@ -40,13 +41,13 @@ type TagListFilter struct {
 }
 
 type HydratedMemo struct {
-	Item       *querier.Memo
+	Item       *memoItem
 	Tags       []string
 	References []uuid.UUID
 }
 
 type HydratedMemoSummary struct {
-	Item *querier.Memo
+	Item *memoItem
 	Tags []string
 }
 
@@ -59,6 +60,18 @@ var (
 
 type memoService struct {
 	model model.ModelInterface
+}
+
+type memoItem struct {
+	ID         uuid.UUID
+	UserID     int32
+	Content    json.RawMessage
+	PlainText  string
+	Excerpt    string
+	State      string
+	ArchivedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 func NewMemoService(m model.ModelInterface) MemoService {
@@ -84,7 +97,11 @@ func (s *memoService) ListMemos(ctx context.Context, userID int32, filter MemoLi
 	if err != nil {
 		return nil, err
 	}
-	return s.hydrateMemoSummaries(ctx, s.model, userID, items)
+	memoItems := make([]*memoItem, 0, len(items))
+	for _, item := range items {
+		memoItems = append(memoItems, memoItemFromList(item))
+	}
+	return s.hydrateMemoSummaries(ctx, s.model, userID, memoItems)
 }
 
 func (s *memoService) GetMemo(ctx context.Context, userID int32, id uuid.UUID) (*HydratedMemo, error) {
@@ -99,20 +116,22 @@ func (s *memoService) GetMemo(ctx context.Context, userID int32, id uuid.UUID) (
 	return s.hydrateMemo(ctx, s.model, userID, item)
 }
 
-func (s *memoService) CreateMemo(ctx context.Context, userID int32, content string) (*HydratedMemo, error) {
+func (s *memoService) CreateMemo(ctx context.Context, userID int32, content json.RawMessage, plainText string, excerpt string, tags []string, references []uuid.UUID) (*HydratedMemo, error) {
 	if err := s.model.EnsureUser(ctx, userID); err != nil {
 		return nil, err
 	}
 
-	content = normalizeMemoContent(content)
 	if err := validateMemoContent(content); err != nil {
 		return nil, err
 	}
-	parsed := parseMemoContent(content)
+	normalizedPlainText := normalizeMemoText(plainText)
+	normalizedExcerpt := normalizeMemoExcerpt(excerpt)
+	normalizedTags := normalizeMemoTags(tags)
+	normalizedReferences := normalizeMemoReferences(references)
 
-	var created *querier.Memo
+	var created *querier.CreateMemoRow
 	if err := s.model.RunTransaction(ctx, func(txModel model.ModelInterface) error {
-		if err := s.validateMemoReferences(ctx, txModel, userID, parsed.ReferenceIDs); err != nil {
+		if err := s.validateMemoReferences(ctx, txModel, userID, normalizedReferences); err != nil {
 			return err
 		}
 
@@ -120,7 +139,8 @@ func (s *memoService) CreateMemo(ctx context.Context, userID int32, content stri
 			ID:         uuid.New(),
 			UserID:     userID,
 			Content:    content,
-			Excerpt:    parsed.Excerpt,
+			PlainText:  normalizedPlainText,
+			Excerpt:    normalizedExcerpt,
 			State:      "active",
 			ArchivedAt: nil,
 		})
@@ -128,23 +148,20 @@ func (s *memoService) CreateMemo(ctx context.Context, userID int32, content stri
 			return err
 		}
 		created = item
-		return s.syncMemoDerivedData(ctx, txModel, userID, item.ID, parsed)
+		return s.syncMemoDerivedData(ctx, txModel, userID, item.ID, normalizedTags, normalizedReferences)
 	}); err != nil {
 		return nil, err
 	}
 
-	return &HydratedMemo{Item: created, Tags: parsed.Tags, References: parsed.ReferenceIDs}, nil
+	return &HydratedMemo{Item: memoItemFromCreate(created), Tags: normalizedTags, References: normalizedReferences}, nil
 }
 
-func (s *memoService) UpdateMemo(ctx context.Context, userID int32, id uuid.UUID, content *string, state *string) (*HydratedMemo, error) {
+func (s *memoService) UpdateMemo(ctx context.Context, userID int32, id uuid.UUID, content json.RawMessage, plainText string, excerpt string, tags []string, references []uuid.UUID, state *string) (*HydratedMemo, error) {
 	if err := s.model.EnsureUser(ctx, userID); err != nil {
 		return nil, err
 	}
 
-	var (
-		updated *querier.Memo
-		parsed  parsedMemoContent
-	)
+	var updated *querier.UpdateMemoRow
 
 	if err := s.model.RunTransaction(ctx, func(txModel model.ModelInterface) error {
 		current, err := s.getMemoByID(ctx, txModel, userID, id)
@@ -152,11 +169,7 @@ func (s *memoService) UpdateMemo(ctx context.Context, userID int32, id uuid.UUID
 			return err
 		}
 
-		newContent := current.Content
-		if content != nil {
-			newContent = normalizeMemoContent(*content)
-		}
-		if err := validateMemoContent(newContent); err != nil {
+		if err := validateMemoContent(content); err != nil {
 			return err
 		}
 
@@ -168,8 +181,11 @@ func (s *memoService) UpdateMemo(ctx context.Context, userID int32, id uuid.UUID
 			return err
 		}
 
-		parsed = parseMemoContent(newContent)
-		if err := s.validateMemoReferences(ctx, txModel, userID, parsed.ReferenceIDs); err != nil {
+		normalizedPlainText := normalizeMemoText(plainText)
+		normalizedExcerpt := normalizeMemoExcerpt(excerpt)
+		normalizedTags := normalizeMemoTags(tags)
+		normalizedReferences := normalizeMemoReferences(references)
+		if err := s.validateMemoReferences(ctx, txModel, userID, normalizedReferences); err != nil {
 			return err
 		}
 
@@ -177,8 +193,9 @@ func (s *memoService) UpdateMemo(ctx context.Context, userID int32, id uuid.UUID
 		item, err := txModel.UpdateMemo(ctx, querier.UpdateMemoParams{
 			ID:         id,
 			UserID:     userID,
-			Content:    newContent,
-			Excerpt:    parsed.Excerpt,
+			Content:    content,
+			PlainText:  normalizedPlainText,
+			Excerpt:    normalizedExcerpt,
 			State:      newState,
 			ArchivedAt: archivedAt,
 		})
@@ -189,12 +206,14 @@ func (s *memoService) UpdateMemo(ctx context.Context, userID int32, id uuid.UUID
 			return err
 		}
 		updated = item
-		return s.syncMemoDerivedData(ctx, txModel, userID, id, parsed)
+		return s.syncMemoDerivedData(ctx, txModel, userID, id, normalizedTags, normalizedReferences)
 	}); err != nil {
 		return nil, err
 	}
 
-	return &HydratedMemo{Item: updated, Tags: parsed.Tags, References: parsed.ReferenceIDs}, nil
+	normalizedTags := normalizeMemoTags(tags)
+	normalizedReferences := normalizeMemoReferences(references)
+	return &HydratedMemo{Item: memoItemFromUpdate(updated), Tags: normalizedTags, References: normalizedReferences}, nil
 }
 
 func (s *memoService) DeleteMemo(ctx context.Context, userID int32, id uuid.UUID) error {
@@ -230,7 +249,15 @@ func (s *memoService) ListMemoBacklinks(ctx context.Context, userID int32, id uu
 	if err != nil {
 		return nil, err
 	}
-	return s.hydrateMemoSummaries(ctx, s.model, userID, items)
+	result := make([]*HydratedMemoSummary, 0, len(items))
+	for _, item := range items {
+		tags, err := s.model.ListMemoTagsByMemo(ctx, querier.ListMemoTagsByMemoParams{MemoID: item.ID, UserID: userID})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &HydratedMemoSummary{Item: memoItemFromBacklink(item), Tags: tags})
+	}
+	return result, nil
 }
 
 func (s *memoService) ListTags(ctx context.Context, userID int32, filter TagListFilter) ([]*querier.ListTagsRow, error) {
@@ -245,15 +272,18 @@ func (s *memoService) ListTags(ctx context.Context, userID int32, filter TagList
 	})
 }
 
-func (s *memoService) getMemoByID(ctx context.Context, m model.ModelInterface, userID int32, id uuid.UUID) (*querier.Memo, error) {
+func (s *memoService) getMemoByID(ctx context.Context, m model.ModelInterface, userID int32, id uuid.UUID) (*memoItem, error) {
 	item, err := m.GetMemoByID(ctx, querier.GetMemoByIDParams{ID: id, UserID: userID})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrMemoNotFound
 	}
-	return item, err
+	if err != nil {
+		return nil, err
+	}
+	return memoItemFromGet(item), nil
 }
 
-func (s *memoService) hydrateMemo(ctx context.Context, m model.ModelInterface, userID int32, item *querier.Memo) (*HydratedMemo, error) {
+func (s *memoService) hydrateMemo(ctx context.Context, m model.ModelInterface, userID int32, item *memoItem) (*HydratedMemo, error) {
 	tags, err := m.ListMemoTagsByMemo(ctx, querier.ListMemoTagsByMemoParams{MemoID: item.ID, UserID: userID})
 	if err != nil {
 		return nil, err
@@ -265,7 +295,7 @@ func (s *memoService) hydrateMemo(ctx context.Context, m model.ModelInterface, u
 	return &HydratedMemo{Item: item, Tags: tags, References: references}, nil
 }
 
-func (s *memoService) hydrateMemoSummaries(ctx context.Context, m model.ModelInterface, userID int32, items []*querier.Memo) ([]*HydratedMemoSummary, error) {
+func (s *memoService) hydrateMemoSummaries(ctx context.Context, m model.ModelInterface, userID int32, items []*memoItem) ([]*HydratedMemoSummary, error) {
 	result := make([]*HydratedMemoSummary, 0, len(items))
 	for _, item := range items {
 		tags, err := m.ListMemoTagsByMemo(ctx, querier.ListMemoTagsByMemoParams{MemoID: item.ID, UserID: userID})
@@ -277,11 +307,81 @@ func (s *memoService) hydrateMemoSummaries(ctx context.Context, m model.ModelInt
 	return result, nil
 }
 
-func (s *memoService) syncMemoDerivedData(ctx context.Context, m model.ModelInterface, userID int32, memoID uuid.UUID, parsed parsedMemoContent) error {
+func memoItemFromCreate(row *querier.CreateMemoRow) *memoItem {
+	return &memoItem{
+		ID:         row.ID,
+		UserID:     row.UserID,
+		Content:    row.Content,
+		PlainText:  row.PlainText,
+		Excerpt:    row.Excerpt,
+		State:      row.State,
+		ArchivedAt: row.ArchivedAt,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}
+}
+
+func memoItemFromUpdate(row *querier.UpdateMemoRow) *memoItem {
+	return &memoItem{
+		ID:         row.ID,
+		UserID:     row.UserID,
+		Content:    row.Content,
+		PlainText:  row.PlainText,
+		Excerpt:    row.Excerpt,
+		State:      row.State,
+		ArchivedAt: row.ArchivedAt,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}
+}
+
+func memoItemFromGet(row *querier.GetMemoByIDRow) *memoItem {
+	return &memoItem{
+		ID:         row.ID,
+		UserID:     row.UserID,
+		Content:    row.Content,
+		PlainText:  row.PlainText,
+		Excerpt:    row.Excerpt,
+		State:      row.State,
+		ArchivedAt: row.ArchivedAt,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}
+}
+
+func memoItemFromList(row *querier.ListMemosRow) *memoItem {
+	return &memoItem{
+		ID:         row.ID,
+		UserID:     row.UserID,
+		Content:    row.Content,
+		PlainText:  row.PlainText,
+		Excerpt:    row.Excerpt,
+		State:      row.State,
+		ArchivedAt: row.ArchivedAt,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}
+}
+
+func memoItemFromBacklink(row *querier.ListMemoBacklinksRow) *memoItem {
+	return &memoItem{
+		ID:         row.ID,
+		UserID:     row.UserID,
+		Content:    row.Content,
+		PlainText:  row.PlainText,
+		Excerpt:    row.Excerpt,
+		State:      row.State,
+		ArchivedAt: row.ArchivedAt,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}
+}
+
+func (s *memoService) syncMemoDerivedData(ctx context.Context, m model.ModelInterface, userID int32, memoID uuid.UUID, tags []string, references []uuid.UUID) error {
 	if err := m.DeleteMemoTagsByMemo(ctx, querier.DeleteMemoTagsByMemoParams{MemoID: memoID, UserID: userID}); err != nil {
 		return err
 	}
-	for _, tag := range parsed.Tags {
+	for _, tag := range tags {
 		if err := m.CreateMemoTag(ctx, querier.CreateMemoTagParams{MemoID: memoID, UserID: userID, Tag: tag}); err != nil {
 			return err
 		}
@@ -290,7 +390,7 @@ func (s *memoService) syncMemoDerivedData(ctx context.Context, m model.ModelInte
 	if err := m.DeleteMemoRelationsBySource(ctx, querier.DeleteMemoRelationsBySourceParams{SourceMemoID: memoID, UserID: userID}); err != nil {
 		return err
 	}
-	for _, refID := range parsed.ReferenceIDs {
+	for _, refID := range references {
 		if err := m.CreateMemoRelation(ctx, querier.CreateMemoRelationParams{SourceMemoID: memoID, TargetMemoID: refID, UserID: userID}); err != nil {
 			return err
 		}
@@ -306,17 +406,6 @@ func (s *memoService) validateMemoReferences(ctx context.Context, m model.ModelI
 			}
 			return err
 		}
-	}
-	return nil
-}
-
-func normalizeMemoContent(content string) string {
-	return strings.TrimSpace(strings.ReplaceAll(content, "\r\n", "\n"))
-}
-
-func validateMemoContent(content string) error {
-	if strings.TrimSpace(content) == "" {
-		return ErrInvalidMemoContent
 	}
 	return nil
 }
