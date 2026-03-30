@@ -16,6 +16,8 @@ github.com/clipperhouse/uax29/v2 v2.7.0 h1:+gs4oBZ2gPfVrKPthwbMzWZDaAFPGYK72F0NJ
 github.com/clipperhouse/uax29/v2 v2.7.0/go.mod h1:EFJ2TJMRUaplDxHKj1qAEhCtQPW2tJSwu5BF98AuoVM=
 github.com/cloudcarver/anclax v1.0.1-0.20260329055443-c56479662c7b h1:z4vacBGxz2q6BbEcfdkDfosDfIox1er3Td3FmKj8Xaw=
 github.com/cloudcarver/anclax v1.0.1-0.20260329055443-c56479662c7b/go.mod h1:ethQN04vQ6j6+jF/GJiNieLaMem4j6t4t6vlIzBl8+c=
+github.com/cloudcarver/anclax v1.0.1-0.20260330041618-a2d0509d4fb0 h1:El/0vwaElbY5ZMmF0B7sQZWQdPkF9c3n55ODiwHx3A4=
+github.com/cloudcarver/anclax v1.0.1-0.20260330041618-a2d0509d4fb0/go.mod h1:ethQN04vQ6j6+jF/GJiNieLaMem4j6t4t6vlIzBl8+c=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

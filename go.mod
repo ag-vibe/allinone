@@ -3,7 +3,7 @@ module github.com/wibus-wee/allinone
 go 1.25.6
 
 require (
-	github.com/cloudcarver/anclax v1.0.1-0.20260329055443-c56479662c7b
+	github.com/cloudcarver/anclax v1.0.1-0.20260330041618-a2d0509d4fb0
 	github.com/gofiber/fiber/v2 v2.52.12
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
