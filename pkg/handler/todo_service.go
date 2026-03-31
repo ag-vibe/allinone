@@ -16,10 +16,23 @@ import (
 
 // TodoService defines the operations supported by the TODO domain.
 type TodoService interface {
-	ListTodos(ctx context.Context, userID int32) ([]*querier.TodoItem, error)
-	CreateTodo(ctx context.Context, userID int32, title string) (*querier.TodoItem, error)
-	UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string, description *string) (*querier.TodoItem, error)
+	ListTodos(ctx context.Context, userID int32) ([]*todoItem, error)
+	CreateTodo(ctx context.Context, userID int32, title string) (*todoItem, error)
+	UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string, description *string) (*todoItem, error)
 	DeleteTodo(ctx context.Context, userID int32, id uuid.UUID) error
+}
+
+type todoItem struct {
+	ID             uuid.UUID
+	UserID         int32
+	Title          string
+	Done           bool
+	CreatedAt      time.Time
+	DoneAt         *time.Time
+	Bucket         string
+	PlannedForDay  pgtype.Date
+	PlannedForWeek pgtype.Date
+	Description    string
 }
 
 // ErrTodoNotFound indicates that the requested TODO item does not exist.
@@ -49,17 +62,25 @@ func (s *todoService) normalizeBuckets(ctx context.Context, userID int32) error 
 	return nil
 }
 
-func (s *todoService) ListTodos(ctx context.Context, userID int32) ([]*querier.TodoItem, error) {
+func (s *todoService) ListTodos(ctx context.Context, userID int32) ([]*todoItem, error) {
 	if err := s.ensureUser(ctx, userID); err != nil {
 		return nil, err
 	}
 	if err := s.normalizeBuckets(ctx, userID); err != nil {
 		return nil, err
 	}
-	return s.model.ListTodosByUser(ctx, userID)
+	rows, err := s.model.ListTodosByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*todoItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, todoItemFromList(row))
+	}
+	return items, nil
 }
 
-func (s *todoService) CreateTodo(ctx context.Context, userID int32, title string) (*querier.TodoItem, error) {
+func (s *todoService) CreateTodo(ctx context.Context, userID int32, title string) (*todoItem, error) {
 	if err := s.ensureUser(ctx, userID); err != nil {
 		return nil, err
 	}
@@ -72,10 +93,14 @@ func (s *todoService) CreateTodo(ctx context.Context, userID int32, title string
 		Bucket: "later",
 	}
 
-	return s.model.CreateTodo(ctx, params)
+	row, err := s.model.CreateTodo(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return todoItemFromCreate(row), nil
 }
 
-func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string, description *string) (*querier.TodoItem, error) {
+func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID, title *string, done *bool, bucket *string, description *string) (*todoItem, error) {
 	if err := s.ensureUser(ctx, userID); err != nil {
 		return nil, err
 	}
@@ -90,10 +115,10 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 		return nil, err
 	}
 
-	var current *querier.TodoItem
+	var current *todoItem
 	for _, item := range items {
 		if item.ID == id {
-			current = item
+			current = todoItemFromList(item)
 			break
 		}
 	}
@@ -143,13 +168,14 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 		Description: newDescription,
 	}
 
-	updated, err := s.model.UpdateTodo(ctx, updateParams)
+	updatedRow, err := s.model.UpdateTodo(ctx, updateParams)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrTodoNotFound
 		}
 		return nil, err
 	}
+	updated := todoItemFromUpdate(updatedRow)
 
 	// Now compute planned_for_day/week based on the new bucket and done state.
 	var plannedDay pgtype.Date
@@ -197,6 +223,60 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 	updated.PlannedForWeek = plannedWeek
 
 	return updated, nil
+}
+
+func todoItemFromCreate(row *querier.CreateTodoRow) *todoItem {
+	if row == nil {
+		return nil
+	}
+	return &todoItem{
+		ID:             row.ID,
+		UserID:         row.UserID,
+		Title:          row.Title,
+		Done:           row.Done,
+		CreatedAt:      row.CreatedAt,
+		DoneAt:         row.DoneAt,
+		Bucket:         row.Bucket,
+		PlannedForDay:  row.PlannedForDay,
+		PlannedForWeek: row.PlannedForWeek,
+		Description:    row.Description,
+	}
+}
+
+func todoItemFromList(row *querier.ListTodosByUserRow) *todoItem {
+	if row == nil {
+		return nil
+	}
+	return &todoItem{
+		ID:             row.ID,
+		UserID:         row.UserID,
+		Title:          row.Title,
+		Done:           row.Done,
+		CreatedAt:      row.CreatedAt,
+		DoneAt:         row.DoneAt,
+		Bucket:         row.Bucket,
+		PlannedForDay:  row.PlannedForDay,
+		PlannedForWeek: row.PlannedForWeek,
+		Description:    row.Description,
+	}
+}
+
+func todoItemFromUpdate(row *querier.UpdateTodoRow) *todoItem {
+	if row == nil {
+		return nil
+	}
+	return &todoItem{
+		ID:             row.ID,
+		UserID:         row.UserID,
+		Title:          row.Title,
+		Done:           row.Done,
+		CreatedAt:      row.CreatedAt,
+		DoneAt:         row.DoneAt,
+		Bucket:         row.Bucket,
+		PlannedForDay:  row.PlannedForDay,
+		PlannedForWeek: row.PlannedForWeek,
+		Description:    row.Description,
+	}
 }
 
 func (s *todoService) DeleteTodo(ctx context.Context, userID int32, id uuid.UUID) error {

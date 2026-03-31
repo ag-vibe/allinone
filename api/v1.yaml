@@ -12,6 +12,77 @@ servers:
     description: Base API path
 
 paths:
+  /auth/device/authorize:
+    post:
+      summary: Start device code flow
+      operationId: deviceAuthorize
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceAuthorizeRequest"
+      responses:
+        "200":
+          description: Device code issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceAuthorizeResult"
+      security: []
+
+  /auth/device/token:
+    post:
+      summary: Poll device code token
+      operationId: deviceToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceTokenRequest"
+      responses:
+        "200":
+          description: Device token polling result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceTokenResult"
+      security: []
+
+  /auth/device/approve:
+    post:
+      summary: Approve device code
+      operationId: deviceApprove
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceApproveRequest"
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceApproveResult"
+      security:
+        - BearerAuth: []
+
+  /auth/device/verify:
+    get:
+      summary: Device verification page
+      operationId: deviceVerify
+      responses:
+        "200":
+          description: Verification page
+          content:
+            text/html:
+              schema:
+                type: string
+      security: []
+
   /counter:
     get:
       summary: Get Counter
@@ -693,6 +764,71 @@ components:
             format: uuid
         state:
           $ref: "#/components/schemas/MemoState"
+
+    DeviceAuthorizeRequest:
+      type: object
+      required: [clientId]
+      properties:
+        clientId:
+          type: string
+        scope:
+          type: string
+        deviceName:
+          type: string
+
+    DeviceAuthorizeResult:
+      type: object
+      required: [deviceCode, userCode, verificationUri, verificationUriComplete, expiresIn, interval]
+      properties:
+        deviceCode:
+          type: string
+        userCode:
+          type: string
+        verificationUri:
+          type: string
+        verificationUriComplete:
+          type: string
+        expiresIn:
+          type: integer
+          format: int32
+        interval:
+          type: integer
+          format: int32
+
+    DeviceTokenRequest:
+      type: object
+      required: [deviceCode]
+      properties:
+        deviceCode:
+          type: string
+
+    DeviceTokenResult:
+      type: object
+      properties:
+        error:
+          type: string
+        errorDescription:
+          type: string
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+
+    DeviceApproveRequest:
+      type: object
+      required: [userCode]
+      properties:
+        userCode:
+          type: string
+
+    DeviceApproveResult:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
 
 x-check-rules:
   OperationPermit:

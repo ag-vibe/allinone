@@ -35,6 +35,24 @@ type Counter struct {
 	Value int32
 }
 
+type DeviceCode struct {
+	ID              int64
+	DeviceCodeHash  []byte
+	UserCodeHash    []byte
+	ClientID        string
+	Scope           *string
+	Status          string
+	UserID          *int32
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	ExpiresAt       time.Time
+	LastPollAt      *time.Time
+	PollIntervalSec int32
+	PollCount       int32
+	Ip              *string
+	UserAgent       *string
+}
+
 type Memo struct {
 	ID         uuid.UUID
 	UserID     int32
@@ -65,7 +83,6 @@ type TodoItem struct {
 	Title          string
 	Done           bool
 	CreatedAt      time.Time
-	DoneAt         *time.Time
 	Bucket         string
 	PlannedForDay  pgtype.Date
 	PlannedForWeek pgtype.Date

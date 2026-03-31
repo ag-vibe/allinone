@@ -7,6 +7,7 @@ import (
 	"github.com/wibus-wee/allinone/pkg"
 	"github.com/wibus-wee/allinone/pkg/asynctask"
 	"github.com/wibus-wee/allinone/pkg/config"
+	"github.com/wibus-wee/allinone/pkg/deviceauth"
 	"github.com/wibus-wee/allinone/pkg/handler"
 	"github.com/wibus-wee/allinone/pkg/zcore/app"
 	"github.com/wibus-wee/allinone/pkg/zcore/injection"
@@ -19,7 +20,9 @@ import (
 func InitApp() (*app.App, error) {
 	wire.Build(
 		injection.InjectAuth,
+		injection.InjectService,
 		injection.InjectTaskStore,
+		deviceauth.NewService,
 		handler.NewHandler,
 		handler.NewValidator,
 		taskgen.NewTaskHandler,

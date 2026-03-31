@@ -3,6 +3,7 @@ package injection
 import (
 	anclax_app "github.com/cloudcarver/anclax/pkg/app"
 	"github.com/cloudcarver/anclax/pkg/auth"
+	"github.com/cloudcarver/anclax/pkg/service"
 	taskcore "github.com/cloudcarver/anclax/pkg/taskcore/store"
 )
 
@@ -12,4 +13,8 @@ func InjectAuth(anclaxApp *anclax_app.Application) auth.AuthInterface {
 
 func InjectTaskStore(anclaxApp *anclax_app.Application) taskcore.TaskStoreInterface {
 	return anclaxApp.GetTaskStore()
+}
+
+func InjectService(anclaxApp *anclax_app.Application) service.ServiceInterface {
+	return anclaxApp.GetService()
 }

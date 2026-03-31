@@ -48,7 +48,7 @@ func TestTodoService_ListTodos(t *testing.T) {
 				m.EXPECT().EnsureUser(ctx, userID).Return(nil)
 				m.EXPECT().NormalizeTodayToWeek(ctx, userID).Return(nil)
 				m.EXPECT().NormalizeWeekToLater(ctx, userID).Return(nil)
-				m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.TodoItem{
+				m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.ListTodosByUserRow{
 					{ID: uuid.New(), UserID: userID, Title: "a"},
 					{ID: uuid.New(), UserID: userID, Title: "b"},
 				}, nil)
@@ -97,7 +97,7 @@ func TestTodoService_UpdateTodoPersistsDescriptionAndBucket(t *testing.T) {
 	m.EXPECT().EnsureUser(ctx, userID).Return(nil)
 	m.EXPECT().NormalizeTodayToWeek(ctx, userID).Return(nil)
 	m.EXPECT().NormalizeWeekToLater(ctx, userID).Return(nil)
-	m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.TodoItem{
+	m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.ListTodosByUserRow{
 		{
 			ID:          id,
 			UserID:      userID,
@@ -108,7 +108,7 @@ func TestTodoService_UpdateTodoPersistsDescriptionAndBucket(t *testing.T) {
 			CreatedAt:   time.Date(2026, time.March, 30, 0, 0, 0, 0, time.UTC),
 		},
 	}, nil)
-	m.EXPECT().UpdateTodo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.UpdateTodoParams) (*querier.TodoItem, error) {
+	m.EXPECT().UpdateTodo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.UpdateTodoParams) (*querier.UpdateTodoRow, error) {
 		if arg.ID != id {
 			t.Fatalf("unexpected id: %v", arg.ID)
 		}
@@ -128,7 +128,7 @@ func TestTodoService_UpdateTodoPersistsDescriptionAndBucket(t *testing.T) {
 			t.Fatalf("expected done_at to remain nil")
 		}
 
-		return &querier.TodoItem{
+		return &querier.UpdateTodoRow{
 			ID:          id,
 			UserID:      userID,
 			Title:       arg.Title,
@@ -191,7 +191,7 @@ func TestTodoService_UpdateTodoSetsDoneAtWhenCompleted(t *testing.T) {
 	m.EXPECT().EnsureUser(ctx, userID).Return(nil)
 	m.EXPECT().NormalizeTodayToWeek(ctx, userID).Return(nil)
 	m.EXPECT().NormalizeWeekToLater(ctx, userID).Return(nil)
-	m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.TodoItem{
+	m.EXPECT().ListTodosByUser(ctx, userID).Return([]*querier.ListTodosByUserRow{
 		{
 			ID:          id,
 			UserID:      userID,
@@ -203,14 +203,14 @@ func TestTodoService_UpdateTodoSetsDoneAtWhenCompleted(t *testing.T) {
 			CreatedAt:   time.Date(2026, time.March, 30, 0, 0, 0, 0, time.UTC),
 		},
 	}, nil)
-	m.EXPECT().UpdateTodo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.UpdateTodoParams) (*querier.TodoItem, error) {
+	m.EXPECT().UpdateTodo(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, arg querier.UpdateTodoParams) (*querier.UpdateTodoRow, error) {
 		if !arg.Done {
 			t.Fatalf("expected todo to be marked done")
 		}
 		if arg.DoneAt == nil {
 			t.Fatalf("expected done_at to be set")
 		}
-		return &querier.TodoItem{
+		return &querier.UpdateTodoRow{
 			ID:          id,
 			UserID:      userID,
 			Title:       arg.Title,
@@ -241,7 +241,7 @@ func TestMapTodoToAPIIncludesDescription(t *testing.T) {
 
 	now := time.Date(2026, time.March, 30, 12, 0, 0, 0, time.UTC)
 	doneAt := time.Date(2026, time.March, 31, 9, 0, 0, 0, time.UTC)
-	item := &querier.TodoItem{
+	item := &todoItem{
 		ID:          uuid.New(),
 		Title:       "todo title",
 		Description: "todo description",

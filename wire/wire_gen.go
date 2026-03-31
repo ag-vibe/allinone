@@ -10,6 +10,7 @@ import (
 	"github.com/wibus-wee/allinone/pkg"
 	"github.com/wibus-wee/allinone/pkg/asynctask"
 	"github.com/wibus-wee/allinone/pkg/config"
+	"github.com/wibus-wee/allinone/pkg/deviceauth"
 	"github.com/wibus-wee/allinone/pkg/handler"
 	"github.com/wibus-wee/allinone/pkg/zcore/app"
 	"github.com/wibus-wee/allinone/pkg/zcore/injection"
@@ -34,7 +35,12 @@ func InitApp() (*app.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	serverInterface, err := handler.NewHandler(modelInterface, taskRunner)
+	serviceInterface := injection.InjectService(application)
+	service, err := deviceauth.NewService(configConfig, modelInterface, serviceInterface)
+	if err != nil {
+		return nil, err
+	}
+	serverInterface, err := handler.NewHandler(modelInterface, taskRunner, service)
 	if err != nil {
 		return nil, err
 	}

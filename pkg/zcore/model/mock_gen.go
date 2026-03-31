@@ -43,6 +43,21 @@ func (m *MockModelInterface) EXPECT() *MockModelInterfaceMockRecorder {
 	return m.recorder
 }
 
+// ApproveDeviceCode mocks base method.
+func (m *MockModelInterface) ApproveDeviceCode(ctx context.Context, arg querier.ApproveDeviceCodeParams) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ApproveDeviceCode", ctx, arg)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ApproveDeviceCode indicates an expected call of ApproveDeviceCode.
+func (mr *MockModelInterfaceMockRecorder) ApproveDeviceCode(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApproveDeviceCode", reflect.TypeOf((*MockModelInterface)(nil).ApproveDeviceCode), ctx, arg)
+}
+
 // Close mocks base method.
 func (m *MockModelInterface) Close() {
 	m.ctrl.T.Helper()
@@ -53,6 +68,21 @@ func (m *MockModelInterface) Close() {
 func (mr *MockModelInterfaceMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockModelInterface)(nil).Close))
+}
+
+// ConsumeDeviceCodeIfApproved mocks base method.
+func (m *MockModelInterface) ConsumeDeviceCodeIfApproved(ctx context.Context, id int64) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsumeDeviceCodeIfApproved", ctx, id)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConsumeDeviceCodeIfApproved indicates an expected call of ConsumeDeviceCodeIfApproved.
+func (mr *MockModelInterfaceMockRecorder) ConsumeDeviceCodeIfApproved(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumeDeviceCodeIfApproved", reflect.TypeOf((*MockModelInterface)(nil).ConsumeDeviceCodeIfApproved), ctx, id)
 }
 
 // CreateAttachment mocks base method.
@@ -82,6 +112,21 @@ func (m *MockModelInterface) CreateAttachmentLink(ctx context.Context, arg queri
 func (mr *MockModelInterfaceMockRecorder) CreateAttachmentLink(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAttachmentLink", reflect.TypeOf((*MockModelInterface)(nil).CreateAttachmentLink), ctx, arg)
+}
+
+// CreateDeviceCode mocks base method.
+func (m *MockModelInterface) CreateDeviceCode(ctx context.Context, arg querier.CreateDeviceCodeParams) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDeviceCode", ctx, arg)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDeviceCode indicates an expected call of CreateDeviceCode.
+func (mr *MockModelInterfaceMockRecorder) CreateDeviceCode(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDeviceCode", reflect.TypeOf((*MockModelInterface)(nil).CreateDeviceCode), ctx, arg)
 }
 
 // CreateMemo mocks base method.
@@ -257,6 +302,20 @@ func (mr *MockModelInterfaceMockRecorder) EnsureUser(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureUser", reflect.TypeOf((*MockModelInterface)(nil).EnsureUser), ctx, id)
 }
 
+// ExpireDeviceCodes mocks base method.
+func (m *MockModelInterface) ExpireDeviceCodes(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExpireDeviceCodes", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ExpireDeviceCodes indicates an expected call of ExpireDeviceCodes.
+func (mr *MockModelInterfaceMockRecorder) ExpireDeviceCodes(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireDeviceCodes", reflect.TypeOf((*MockModelInterface)(nil).ExpireDeviceCodes), ctx)
+}
+
 // GetAttachmentByID mocks base method.
 func (m *MockModelInterface) GetAttachmentByID(ctx context.Context, arg querier.GetAttachmentByIDParams) (*querier.Attachment, error) {
 	m.ctrl.T.Helper()
@@ -285,6 +344,36 @@ func (m *MockModelInterface) GetCounter(ctx context.Context) (*querier.Counter, 
 func (mr *MockModelInterfaceMockRecorder) GetCounter(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockModelInterface)(nil).GetCounter), ctx)
+}
+
+// GetDeviceCodeByDeviceHash mocks base method.
+func (m *MockModelInterface) GetDeviceCodeByDeviceHash(ctx context.Context, deviceCodeHash []byte) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCodeByDeviceHash", ctx, deviceCodeHash)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCodeByDeviceHash indicates an expected call of GetDeviceCodeByDeviceHash.
+func (mr *MockModelInterfaceMockRecorder) GetDeviceCodeByDeviceHash(ctx, deviceCodeHash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCodeByDeviceHash", reflect.TypeOf((*MockModelInterface)(nil).GetDeviceCodeByDeviceHash), ctx, deviceCodeHash)
+}
+
+// GetDeviceCodeByUserHash mocks base method.
+func (m *MockModelInterface) GetDeviceCodeByUserHash(ctx context.Context, userCodeHash []byte) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCodeByUserHash", ctx, userCodeHash)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCodeByUserHash indicates an expected call of GetDeviceCodeByUserHash.
+func (mr *MockModelInterfaceMockRecorder) GetDeviceCodeByUserHash(ctx, userCodeHash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCodeByUserHash", reflect.TypeOf((*MockModelInterface)(nil).GetDeviceCodeByUserHash), ctx, userCodeHash)
 }
 
 // GetMemoByID mocks base method.
@@ -435,6 +524,21 @@ func (mr *MockModelInterfaceMockRecorder) ListTodosByUser(ctx, userID any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTodosByUser", reflect.TypeOf((*MockModelInterface)(nil).ListTodosByUser), ctx, userID)
 }
 
+// MarkDeviceCodeConsumed mocks base method.
+func (m *MockModelInterface) MarkDeviceCodeConsumed(ctx context.Context, id int64) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MarkDeviceCodeConsumed", ctx, id)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarkDeviceCodeConsumed indicates an expected call of MarkDeviceCodeConsumed.
+func (mr *MockModelInterfaceMockRecorder) MarkDeviceCodeConsumed(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkDeviceCodeConsumed", reflect.TypeOf((*MockModelInterface)(nil).MarkDeviceCodeConsumed), ctx, id)
+}
+
 // NormalizeTodayToWeek mocks base method.
 func (m *MockModelInterface) NormalizeTodayToWeek(ctx context.Context, userID int32) error {
 	m.ctrl.T.Helper()
@@ -503,6 +607,36 @@ func (m *MockModelInterface) SpawnWithTx(tx pgx.Tx) ModelInterface {
 func (mr *MockModelInterfaceMockRecorder) SpawnWithTx(tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpawnWithTx", reflect.TypeOf((*MockModelInterface)(nil).SpawnWithTx), tx)
+}
+
+// TouchDeviceCodePoll mocks base method.
+func (m *MockModelInterface) TouchDeviceCodePoll(ctx context.Context, id int64) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TouchDeviceCodePoll", ctx, id)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TouchDeviceCodePoll indicates an expected call of TouchDeviceCodePoll.
+func (mr *MockModelInterfaceMockRecorder) TouchDeviceCodePoll(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TouchDeviceCodePoll", reflect.TypeOf((*MockModelInterface)(nil).TouchDeviceCodePoll), ctx, id)
+}
+
+// UpdateDeviceCodeStatus mocks base method.
+func (m *MockModelInterface) UpdateDeviceCodeStatus(ctx context.Context, arg querier.UpdateDeviceCodeStatusParams) (*querier.DeviceCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDeviceCodeStatus", ctx, arg)
+	ret0, _ := ret[0].(*querier.DeviceCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateDeviceCodeStatus indicates an expected call of UpdateDeviceCodeStatus.
+func (mr *MockModelInterfaceMockRecorder) UpdateDeviceCodeStatus(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeviceCodeStatus", reflect.TypeOf((*MockModelInterface)(nil).UpdateDeviceCodeStatus), ctx, arg)
 }
 
 // UpdateMemo mocks base method.

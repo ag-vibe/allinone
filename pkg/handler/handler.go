@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 
+	"github.com/wibus-wee/allinone/pkg/deviceauth"
 	"github.com/wibus-wee/allinone/pkg/zcore/model"
 	"github.com/wibus-wee/allinone/pkg/zgen/apigen"
-	"github.com/wibus-wee/allinone/pkg/zgen/querier"
 	"github.com/wibus-wee/allinone/pkg/zgen/taskgen"
 )
 
@@ -19,15 +19,17 @@ type Handler struct {
 	todos       TodoService
 	memos       MemoService
 	attachments AttachmentService
+	deviceAuth  *deviceauth.Service
 }
 
-func NewHandler(model model.ModelInterface, taskrunner taskgen.TaskRunner) (apigen.ServerInterface, error) {
+func NewHandler(model model.ModelInterface, taskrunner taskgen.TaskRunner, deviceAuth *deviceauth.Service) (apigen.ServerInterface, error) {
 	return &Handler{
 		model:       model,
 		taskrunner:  taskrunner,
 		todos:       NewTodoService(model),
 		memos:       NewMemoService(model),
 		attachments: NewAttachmentService(model, LoadAttachmentConfig()),
+		deviceAuth:  deviceAuth,
 	}, nil
 }
 
@@ -133,7 +135,7 @@ func (h *Handler) DeleteTodo(c fiber.Ctx, id uuid.UUID) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func mapTodoToAPI(item *querier.TodoItem) apigen.TodoItem {
+func mapTodoToAPI(item *todoItem) apigen.TodoItem {
 	return apigen.TodoItem{
 		Id:          item.ID,
 		Title:       item.Title,

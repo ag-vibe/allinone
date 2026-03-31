@@ -11,8 +11,11 @@ import (
 )
 
 type Querier interface {
+	ApproveDeviceCode(ctx context.Context, arg ApproveDeviceCodeParams) (*DeviceCode, error)
+	ConsumeDeviceCodeIfApproved(ctx context.Context, id int64) (*DeviceCode, error)
 	CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (*Attachment, error)
 	CreateAttachmentLink(ctx context.Context, arg CreateAttachmentLinkParams) error
+	CreateDeviceCode(ctx context.Context, arg CreateDeviceCodeParams) (*DeviceCode, error)
 	CreateMemo(ctx context.Context, arg CreateMemoParams) (*CreateMemoRow, error)
 	CreateMemoRelation(ctx context.Context, arg CreateMemoRelationParams) error
 	CreateMemoTag(ctx context.Context, arg CreateMemoTagParams) error
@@ -25,8 +28,11 @@ type Querier interface {
 	DeleteMemoTagsByMemo(ctx context.Context, arg DeleteMemoTagsByMemoParams) error
 	DeleteTodo(ctx context.Context, arg DeleteTodoParams) (uuid.UUID, error)
 	EnsureUser(ctx context.Context, id int32) error
+	ExpireDeviceCodes(ctx context.Context) error
 	GetAttachmentByID(ctx context.Context, arg GetAttachmentByIDParams) (*Attachment, error)
 	GetCounter(ctx context.Context) (*Counter, error)
+	GetDeviceCodeByDeviceHash(ctx context.Context, deviceCodeHash []byte) (*DeviceCode, error)
+	GetDeviceCodeByUserHash(ctx context.Context, userCodeHash []byte) (*DeviceCode, error)
 	GetMemoByID(ctx context.Context, arg GetMemoByIDParams) (*GetMemoByIDRow, error)
 	IncrementCounter(ctx context.Context) error
 	ListAttachmentsByResource(ctx context.Context, arg ListAttachmentsByResourceParams) ([]*Attachment, error)
@@ -36,8 +42,11 @@ type Querier interface {
 	ListMemos(ctx context.Context, arg ListMemosParams) ([]*ListMemosRow, error)
 	ListTags(ctx context.Context, arg ListTagsParams) ([]*ListTagsRow, error)
 	ListTodosByUser(ctx context.Context, userID int32) ([]*ListTodosByUserRow, error)
+	MarkDeviceCodeConsumed(ctx context.Context, id int64) (*DeviceCode, error)
 	NormalizeTodayToWeek(ctx context.Context, userID int32) error
 	NormalizeWeekToLater(ctx context.Context, userID int32) error
+	TouchDeviceCodePoll(ctx context.Context, id int64) (*DeviceCode, error)
+	UpdateDeviceCodeStatus(ctx context.Context, arg UpdateDeviceCodeStatusParams) (*DeviceCode, error)
 	UpdateMemo(ctx context.Context, arg UpdateMemoParams) (*UpdateMemoRow, error)
 	UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*UpdateTodoRow, error)
 	UpdateTodoBucket(ctx context.Context, arg UpdateTodoBucketParams) error

@@ -2,13 +2,21 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"github.com/cloudcarver/anclax/lib/conf"
 	anclax_config "github.com/cloudcarver/anclax/pkg/config"
 )
 
 type Config struct {
-	Anclax anclax_config.Config `yaml:"anclax,omitempty"`
+	Anclax     anclax_config.Config `yaml:"anclax,omitempty"`
+	DeviceCode DeviceCodeConfig     `yaml:"devicecode,omitempty"`
+}
+
+type DeviceCodeConfig struct {
+	Secret       string         `yaml:"secret"`
+	ExpiresIn    *time.Duration `yaml:"expiresIn"`
+	PollInterval *time.Duration `yaml:"pollInterval"`
 }
 
 const (
