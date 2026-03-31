@@ -111,6 +111,18 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 		newDone = *done
 	}
 
+	newDoneAt := current.DoneAt
+	if done != nil {
+		if *done {
+			if current.DoneAt == nil || !current.Done {
+				now := time.Now().UTC()
+				newDoneAt = &now
+			}
+		} else {
+			newDoneAt = nil
+		}
+	}
+
 	newDescription := current.Description
 	if description != nil {
 		newDescription = strings.TrimSpace(*description)
@@ -127,6 +139,7 @@ func (s *todoService) UpdateTodo(ctx context.Context, userID int32, id uuid.UUID
 		UserID:      userID,
 		Title:       newTitle,
 		Done:        newDone,
+		DoneAt:      newDoneAt,
 		Description: newDescription,
 	}
 

@@ -7,6 +7,7 @@ package querier
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -15,7 +16,7 @@ import (
 const createTodo = `-- name: CreateTodo :one
 INSERT INTO todo_items (id, user_id, title, bucket)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
+RETURNING id, user_id, title, done, created_at, done_at, bucket, planned_for_day, planned_for_week, description
 `
 
 type CreateTodoParams struct {
@@ -25,20 +26,34 @@ type CreateTodoParams struct {
 	Bucket string
 }
 
-func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (*TodoItem, error) {
+type CreateTodoRow struct {
+	ID             uuid.UUID
+	UserID         int32
+	Title          string
+	Done           bool
+	CreatedAt      time.Time
+	DoneAt         *time.Time
+	Bucket         string
+	PlannedForDay  pgtype.Date
+	PlannedForWeek pgtype.Date
+	Description    string
+}
+
+func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (*CreateTodoRow, error) {
 	row := q.db.QueryRow(ctx, createTodo,
 		arg.ID,
 		arg.UserID,
 		arg.Title,
 		arg.Bucket,
 	)
-	var i TodoItem
+	var i CreateTodoRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Title,
 		&i.Done,
 		&i.CreatedAt,
+		&i.DoneAt,
 		&i.Bucket,
 		&i.PlannedForDay,
 		&i.PlannedForWeek,
@@ -66,27 +81,41 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) (uuid.UU
 }
 
 const listTodosByUser = `-- name: ListTodosByUser :many
-SELECT id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
+SELECT id, user_id, title, done, created_at, done_at, bucket, planned_for_day, planned_for_week, description
 FROM todo_items
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListTodosByUser(ctx context.Context, userID int32) ([]*TodoItem, error) {
+type ListTodosByUserRow struct {
+	ID             uuid.UUID
+	UserID         int32
+	Title          string
+	Done           bool
+	CreatedAt      time.Time
+	DoneAt         *time.Time
+	Bucket         string
+	PlannedForDay  pgtype.Date
+	PlannedForWeek pgtype.Date
+	Description    string
+}
+
+func (q *Queries) ListTodosByUser(ctx context.Context, userID int32) ([]*ListTodosByUserRow, error) {
 	rows, err := q.db.Query(ctx, listTodosByUser, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []*TodoItem
+	var items []*ListTodosByUserRow
 	for rows.Next() {
-		var i TodoItem
+		var i ListTodosByUserRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
 			&i.Title,
 			&i.Done,
 			&i.CreatedAt,
+			&i.DoneAt,
 			&i.Bucket,
 			&i.PlannedForDay,
 			&i.PlannedForWeek,
@@ -138,9 +167,10 @@ const updateTodo = `-- name: UpdateTodo :one
 UPDATE todo_items
 SET title = $3,
     done = $4,
-    description = $5
+    done_at = $5,
+    description = $6
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, title, done, created_at, bucket, planned_for_day, planned_for_week, description
+RETURNING id, user_id, title, done, created_at, done_at, bucket, planned_for_day, planned_for_week, description
 `
 
 type UpdateTodoParams struct {
@@ -148,24 +178,40 @@ type UpdateTodoParams struct {
 	UserID      int32
 	Title       string
 	Done        bool
+	DoneAt      *time.Time
 	Description string
 }
 
-func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoItem, error) {
+type UpdateTodoRow struct {
+	ID             uuid.UUID
+	UserID         int32
+	Title          string
+	Done           bool
+	CreatedAt      time.Time
+	DoneAt         *time.Time
+	Bucket         string
+	PlannedForDay  pgtype.Date
+	PlannedForWeek pgtype.Date
+	Description    string
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*UpdateTodoRow, error) {
 	row := q.db.QueryRow(ctx, updateTodo,
 		arg.ID,
 		arg.UserID,
 		arg.Title,
 		arg.Done,
+		arg.DoneAt,
 		arg.Description,
 	)
-	var i TodoItem
+	var i UpdateTodoRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Title,
 		&i.Done,
 		&i.CreatedAt,
+		&i.DoneAt,
 		&i.Bucket,
 		&i.PlannedForDay,
 		&i.PlannedForWeek,

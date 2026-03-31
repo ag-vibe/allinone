@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE todo_items
+    ADD COLUMN done_at TIMESTAMPTZ;
+
+COMMIT;

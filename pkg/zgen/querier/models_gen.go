@@ -65,10 +65,12 @@ type TodoItem struct {
 	Title          string
 	Done           bool
 	CreatedAt      time.Time
+	DoneAt         *time.Time
 	Bucket         string
 	PlannedForDay  pgtype.Date
 	PlannedForWeek pgtype.Date
 	Description    string
+	DoneAt         *time.Time
 }
 
 type User struct {

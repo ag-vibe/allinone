@@ -507,6 +507,10 @@ components:
           type: string
         done:
           type: boolean
+        doneAt:
+          type: string
+          format: date-time
+          nullable: true
         bucket:
           type: string
           enum: [later, week, today]

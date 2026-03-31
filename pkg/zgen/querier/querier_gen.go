@@ -16,7 +16,7 @@ type Querier interface {
 	CreateMemo(ctx context.Context, arg CreateMemoParams) (*CreateMemoRow, error)
 	CreateMemoRelation(ctx context.Context, arg CreateMemoRelationParams) error
 	CreateMemoTag(ctx context.Context, arg CreateMemoTagParams) error
-	CreateTodo(ctx context.Context, arg CreateTodoParams) (*TodoItem, error)
+	CreateTodo(ctx context.Context, arg CreateTodoParams) (*CreateTodoRow, error)
 	DeleteAttachment(ctx context.Context, arg DeleteAttachmentParams) (*Attachment, error)
 	DeleteAttachmentLink(ctx context.Context, arg DeleteAttachmentLinkParams) error
 	DeleteAttachmentLinksByResource(ctx context.Context, arg DeleteAttachmentLinksByResourceParams) error
@@ -35,11 +35,11 @@ type Querier interface {
 	ListMemoTagsByMemo(ctx context.Context, arg ListMemoTagsByMemoParams) ([]string, error)
 	ListMemos(ctx context.Context, arg ListMemosParams) ([]*ListMemosRow, error)
 	ListTags(ctx context.Context, arg ListTagsParams) ([]*ListTagsRow, error)
-	ListTodosByUser(ctx context.Context, userID int32) ([]*TodoItem, error)
+	ListTodosByUser(ctx context.Context, userID int32) ([]*ListTodosByUserRow, error)
 	NormalizeTodayToWeek(ctx context.Context, userID int32) error
 	NormalizeWeekToLater(ctx context.Context, userID int32) error
 	UpdateMemo(ctx context.Context, arg UpdateMemoParams) (*UpdateMemoRow, error)
-	UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*TodoItem, error)
+	UpdateTodo(ctx context.Context, arg UpdateTodoParams) (*UpdateTodoRow, error)
 	UpdateTodoBucket(ctx context.Context, arg UpdateTodoBucketParams) error
 }
 

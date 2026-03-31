@@ -128,10 +128,10 @@ func (mr *MockModelInterfaceMockRecorder) CreateMemoTag(ctx, arg any) *gomock.Ca
 }
 
 // CreateTodo mocks base method.
-func (m *MockModelInterface) CreateTodo(ctx context.Context, arg querier.CreateTodoParams) (*querier.TodoItem, error) {
+func (m *MockModelInterface) CreateTodo(ctx context.Context, arg querier.CreateTodoParams) (*querier.CreateTodoRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTodo", ctx, arg)
-	ret0, _ := ret[0].(*querier.TodoItem)
+	ret0, _ := ret[0].(*querier.CreateTodoRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -421,10 +421,10 @@ func (mr *MockModelInterfaceMockRecorder) ListTags(ctx, arg any) *gomock.Call {
 }
 
 // ListTodosByUser mocks base method.
-func (m *MockModelInterface) ListTodosByUser(ctx context.Context, userID int32) ([]*querier.TodoItem, error) {
+func (m *MockModelInterface) ListTodosByUser(ctx context.Context, userID int32) ([]*querier.ListTodosByUserRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListTodosByUser", ctx, userID)
-	ret0, _ := ret[0].([]*querier.TodoItem)
+	ret0, _ := ret[0].([]*querier.ListTodosByUserRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -521,10 +521,10 @@ func (mr *MockModelInterfaceMockRecorder) UpdateMemo(ctx, arg any) *gomock.Call 
 }
 
 // UpdateTodo mocks base method.
-func (m *MockModelInterface) UpdateTodo(ctx context.Context, arg querier.UpdateTodoParams) (*querier.TodoItem, error) {
+func (m *MockModelInterface) UpdateTodo(ctx context.Context, arg querier.UpdateTodoParams) (*querier.UpdateTodoRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTodo", ctx, arg)
-	ret0, _ := ret[0].(*querier.TodoItem)
+	ret0, _ := ret[0].(*querier.UpdateTodoRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

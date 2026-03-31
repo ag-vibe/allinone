@@ -61,7 +61,7 @@ func (c *Client) RunAutoIncrementCounterWithTx(ctx context.Context, tx core.Tx, 
 }
 
 func (c *Client) runAutoIncrementCounter(ctx context.Context, taskstore taskcore.TaskStoreInterface, tx core.Tx, params *AutoIncrementCounterParameters, overrides ...taskcore.TaskOverride) (int32, error) {
-	payload, err := json.Marshal(params)
+	payload, err := params.Marshal()
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +112,7 @@ func (c *Client) RunIncrementCounterWithTx(ctx context.Context, tx core.Tx, para
 }
 
 func (c *Client) runIncrementCounter(ctx context.Context, taskstore taskcore.TaskStoreInterface, tx core.Tx, params *IncrementCounterParameters, overrides ...taskcore.TaskOverride) (int32, error) {
-	payload, err := json.Marshal(params)
+	payload, err := params.Marshal()
 	if err != nil {
 		return 0, err
 	}
@@ -171,7 +171,6 @@ func (r *AutoIncrementCounterParameters) Parse(spec json.RawMessage) error {
 func (r *AutoIncrementCounterParameters) Marshal() (json.RawMessage, error) {
 	return json.Marshal(r)
 }
-
 func (r *IncrementCounterParameters) Parse(spec json.RawMessage) error {
 	return json.Unmarshal(spec, r)
 }
@@ -179,7 +178,6 @@ func (r *IncrementCounterParameters) Parse(spec json.RawMessage) error {
 func (r *IncrementCounterParameters) Marshal() (json.RawMessage, error) {
 	return json.Marshal(r)
 }
-
 
 type ExecutorInterface interface { 
      // Increment the counter
@@ -221,14 +219,14 @@ func (f *TaskHandler) HandleTask(ctx context.Context, task worker.Task) error {
 	switch task.GetType() { 
 	case AutoIncrementCounter:
 		var params AutoIncrementCounterParameters
-		if err := json.Unmarshal(task.GetPayload(), &params); err != nil {
+		if err := params.Parse(task.GetPayload()); err != nil {
 			return fmt.Errorf("failed to parse AutoIncrementCounter parameters: %w", err)
 		}
 		return f.executor.ExecuteAutoIncrementCounter(ctx, task, &params)
 		
 	case IncrementCounter:
 		var params IncrementCounterParameters
-		if err := json.Unmarshal(task.GetPayload(), &params); err != nil {
+		if err := params.Parse(task.GetPayload()); err != nil {
 			return fmt.Errorf("failed to parse IncrementCounter parameters: %w", err)
 		}
 		return f.executor.ExecuteIncrementCounter(ctx, task, &params)

@@ -190,6 +190,10 @@ components:
                     type: string
                 done:
                     type: boolean
+                doneAt:
+                    format: date-time
+                    nullable: true
+                    type: string
                 id:
                     format: uuid
                     type: string

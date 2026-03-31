@@ -139,6 +139,7 @@ func mapTodoToAPI(item *querier.TodoItem) apigen.TodoItem {
 		Title:       item.Title,
 		Description: item.Description,
 		Done:        item.Done,
+		DoneAt:      item.DoneAt,
 		Bucket:      apigen.TodoItemBucket(item.Bucket),
 		CreatedAt:   item.CreatedAt,
 	}
